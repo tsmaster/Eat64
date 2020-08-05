@@ -24,7 +24,7 @@ namespace BDG
         protected float Speed { get; set; } // pixels per second
         private int _stopX;
         private int _stopY;
-        protected MovementDirection MoveDir { get; set; }
+        public MovementDirection MoveDir { get; set; }
 
         public Character (Texture2D spritesheet, int width, int height, 
             int xPos, int yPos)
@@ -95,6 +95,48 @@ namespace BDG
                 break;
             case MovementDirection.NONE:
                 // do nothing
+                break;
+            }
+        }
+
+        public static MovementDirection OppositeMoveDirection (MovementDirection moveDir)
+        {
+            switch (moveDir) {
+            case MovementDirection.EAST:
+                return MovementDirection.WEST;
+            case MovementDirection.NORTH:
+                return MovementDirection.SOUTH;
+            case MovementDirection.WEST:
+                return MovementDirection.EAST;
+            case MovementDirection.SOUTH:
+                return MovementDirection.NORTH;
+            default:
+                return MovementDirection.NONE;
+            }
+        }
+
+        public static void GetDeltaPixelsFromDirection (MovementDirection d, out int dx, out int dy)
+        {
+            switch (d) {
+            case MovementDirection.EAST:
+                dx = 8;
+                dy = 0;
+                break;
+            case MovementDirection.NORTH:
+                dx = 0;
+                dy = 8;
+                break;
+            case MovementDirection.WEST:
+                dx = -8;
+                dy = 0;
+                break;
+            case MovementDirection.SOUTH:
+                dx = 0;
+                dy = -8;
+                break;
+            default:
+                dx = 0;
+                dy = 0;
                 break;
             }
         }

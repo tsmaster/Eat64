@@ -19,7 +19,7 @@ namespace BDG
         private int [,] maze = {
             { 3, 9, 9, 6, 6, 9, 9, 2 },
             { 7, 2, 3, 1, 0, 2, 3, 5 },
-            {10,10, 7, 6, 6, 5,10,10 },
+            {10,10, 7, 9, 9, 5,10,10 },
             {10, 0, 5,11,12, 7, 1,10 },
             { 8, 9, 8, 9, 9, 8, 9, 8 },
             {10, 3, 8, 9, 9, 8, 2,10 },
@@ -41,9 +41,11 @@ namespace BDG
 
             pacMan = new PacMan (spriteSheet,
                 28, 8);
+            PacMan.PacManSingleton = pacMan;
 
             MapManager.MapMgrSingleton = new MapManager ();
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
+            GhostManager.GhostMgrSingleton = new GhostManager (spriteSheet);
 
             for (int x = 0; x < 8; ++x) {
                 for (int y = 0; y < 8; ++y) {
@@ -66,6 +68,16 @@ namespace BDG
             DotManager.DotMgrSingleton.AddDot (0, 56, true);
             DotManager.DotMgrSingleton.AddDot (56, 0, true);
             DotManager.DotMgrSingleton.AddDot (56, 56, true);
+
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.BLINKY, 24, 40, Ghost.GhostState.CHASE);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 32, 40, Ghost.GhostState.CHASE);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 24, 48, Ghost.GhostState.CHASE);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 48, Ghost.GhostState.CHASE);
+
+            //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 40, 40, Ghost.GhostState.CHASE);
+            //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 24, 32, Ghost.GhostState.CAGED);
+            //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 28, 32, Ghost.GhostState.CAGED);
+            //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 32, Ghost.GhostState.CAGED);
         }
 
         // Update is called once per frame
@@ -84,27 +96,19 @@ namespace BDG
 
             float dt = Time.deltaTime;
             pacMan.Update (dt);
-
+            GhostManager.GhostMgrSingleton.Update (dt);
             DotManager.DotMgrSingleton.EatAt (pacMan.XPos, pacMan.YPos);
 
+            // draw
+
             DrawMaze ();
+
+            DotManager.DotMgrSingleton.Draw (_displayTexture);
 
             // Pac Man
             pacMan.Draw (_displayTexture);
 
-            // Blinky (red)
-            DrawSpriteAlpha (40, 8, 8, 8, 27, 40);
-
-            // Pinky (pink)
-            DrawSpriteAlpha (48, 8, 8, 8, 24, 32);
-
-            // Inky (blue)
-            DrawSpriteAlpha (56, 8, 8, 8, 28, 32);
-
-            // Clyde (orange)
-            DrawSpriteAlpha (0, 0, 8, 8, 32, 32);
-
-            DotManager.DotMgrSingleton.Draw (_displayTexture);
+            GhostManager.GhostMgrSingleton.Draw (_displayTexture);
 
             _displayTexture.Apply ();
         }

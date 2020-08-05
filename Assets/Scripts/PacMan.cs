@@ -10,12 +10,14 @@ namespace BDG
         float _mouthPeriod = 0.2f;
         float _mouthTimer = 0.0f;
 
-        public PacMan (Texture2D spritesheet, int xPos, int yPos) : 
+        public PacMan (Texture2D spritesheet, int xPos, int yPos) :
             base (spritesheet, 8, 8, xPos, yPos)
         {
             _queuedMovementDirection = MovementDirection.NONE;
             Speed = 12.0f;
         }
+
+        public static PacMan PacManSingleton {get; set;}
 
         public void QueueMovementDirection (MovementDirection dir)
         {

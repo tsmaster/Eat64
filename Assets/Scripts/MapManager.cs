@@ -35,5 +35,13 @@ namespace BDG
         {
             return _tiles [ty, tx];
         }
+
+        public Tile GetTileForPixel (float xPos, float yPos)
+        {
+            int ix = Mathf.FloorToInt (xPos / 8.0f);
+            int iy = 7 - Mathf.FloorToInt (yPos / 8.0f);
+
+            return GetTileAt (ix, iy);
+        }
     }
 }

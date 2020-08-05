@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BDG
@@ -134,6 +135,24 @@ namespace BDG
             tile.Name = String.Format ("t {0} {1} {2} {3} {4}", tileIndex, cmEast, cmNorth, cmWest, cmSouth);
 
             return tile;
+        }
+
+        internal List<MovementDirection> GetLegalDirections ()
+        {
+            var dirList = new List<MovementDirection> ();
+            if (CanMoveInDirection (MovementDirection.EAST)) {
+                dirList.Add (MovementDirection.EAST);
+            }
+            if (CanMoveInDirection (MovementDirection.NORTH)) {
+                dirList.Add (MovementDirection.NORTH);
+            }
+            if (CanMoveInDirection (MovementDirection.WEST)) {
+                dirList.Add (MovementDirection.WEST);
+            }
+            if (CanMoveInDirection (MovementDirection.SOUTH)) {
+                dirList.Add (MovementDirection.SOUTH);
+            }
+            return dirList;
         }
     }
 }
