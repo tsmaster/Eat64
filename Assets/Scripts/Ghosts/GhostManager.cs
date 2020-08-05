@@ -16,9 +16,10 @@ namespace BDG
             _ghosts = new List<Ghost> ();
         }
 
-        public void AddGhost (Ghost.GhostName name, int px, int py, Ghost.GhostState gs) {
+        public void AddGhost (Ghost.GhostName name, int px, int py, Ghost.GhostState gs, int homeTileX, int homeTileY) {
             var g = new Ghost (_spritesheet, name, px, py);
             g.SetState (gs);
+            g.SetHomeTile (homeTileX, homeTileY);
             _ghosts.Add (g);
         }
 
@@ -41,6 +42,13 @@ namespace BDG
         public List<Ghost> GetGhostList ()
         {
             return _ghosts;
+        }
+
+        internal void FrightenGhosts ()
+        {
+            foreach (var g in _ghosts) {
+                g.SetFrightened();
+            }
         }
     }
 }

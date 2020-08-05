@@ -151,6 +151,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   displayImage: {fileID: 815151164}
   spriteSheet: {fileID: 2800000, guid: 61071e6f126561b91ad93eba9aedaf2c, type: 3}
+  ghostSpriteSheet: {fileID: 2800000, guid: 574772017a1798f82aeec8367bccb7c8, type: 3}
 --- !u!4 &488386704
 Transform:
   m_ObjectHideFlags: 0

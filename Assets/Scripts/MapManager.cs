@@ -43,5 +43,11 @@ namespace BDG
 
             return GetTileAt (ix, iy);
         }
+
+        public void GetPixelCoordsForTileCoords (int homeTileX, int homeTileY, out int homeXPixel, out int homeYPixel)
+        {
+            homeXPixel = 8 * homeTileX;
+            homeYPixel = 56 - (8 * homeTileY);
+        }
     }
 }

@@ -13,6 +13,8 @@ namespace BDG
         [SerializeField]
         Texture2D spriteSheet;
 
+        [SerializeField]
+        Texture2D ghostSpriteSheet;
 
         Texture2D _displayTexture;
 
@@ -45,7 +47,7 @@ namespace BDG
 
             MapManager.MapMgrSingleton = new MapManager ();
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
-            GhostManager.GhostMgrSingleton = new GhostManager (spriteSheet);
+            GhostManager.GhostMgrSingleton = new GhostManager (ghostSpriteSheet);
 
             for (int x = 0; x < 8; ++x) {
                 for (int y = 0; y < 8; ++y) {
@@ -69,10 +71,10 @@ namespace BDG
             DotManager.DotMgrSingleton.AddDot (56, 0, true);
             DotManager.DotMgrSingleton.AddDot (56, 56, true);
 
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.BLINKY, 24, 40, Ghost.GhostState.CHASE);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 32, 40, Ghost.GhostState.CHASE);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 24, 48, Ghost.GhostState.CHASE);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 48, Ghost.GhostState.CHASE);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.BLINKY, 24, 40, Ghost.GhostState.SCATTER, 9, -1);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 32, 40, Ghost.GhostState.SCATTER, -1, -1);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 24, 48, Ghost.GhostState.SCATTER, -1, 9);
+            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 48, Ghost.GhostState.SCATTER, 9, 9);
 
             //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 40, 40, Ghost.GhostState.CHASE);
             //GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 24, 32, Ghost.GhostState.CAGED);

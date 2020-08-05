@@ -62,6 +62,10 @@ namespace BDG
                 if ((dr.x == ix) &&
                     (dr.y == iy)) {
                     _dots.RemoveAt (i);
+
+                    if (dr.isEnergizer) {
+                        GhostManager.GhostMgrSingleton.FrightenGhosts ();
+                    }
                     return;
                 }
             }

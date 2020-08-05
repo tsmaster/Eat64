@@ -35,8 +35,8 @@ namespace BDG
         float _blinkLength;
         int _numBlinks;
 
-        int _homeX;
-        int _homeY;
+        int _homeXPixel;
+        int _homeYPixel;
 
         public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos) : base(spritesheet, 8,  8, xPos, yPos)
         {
@@ -46,28 +46,55 @@ namespace BDG
             _scatterElapsed = 0.0f;
             _chaseLength = 8.0f;
             _chaseElapsed = 0.0f;
-            _frightenedLength = 12.0f;
+            _frightenedLength = 6.0f;
             _frightenedElapsed = 0.0f;
             _blinkLength = 0.4f;
             _numBlinks = 4;
 
-            _homeX = -1;
-            _homeY = -1;
+            _homeXPixel = -1;
+            _homeYPixel = -1;
 
             Speed = 10.0f;
         }
 
+        internal void SetFrightened ()
+        {
+            _ghostState = GhostState.FRIGHTENED;
+            _frightenedElapsed = 0.0f; // TODO what if I'm already frightened?
+        }
+
+        public void SetHomeTile (int homeTileX, int homeTileY)
+        {
+            MapManager.MapMgrSingleton.GetPixelCoordsForTileCoords (homeTileX, homeTileY, out _homeXPixel, out _homeYPixel);
+        }
+
+
+        int PeriodsUntilFrightenedElapsed ()
+        {
+            float floatSecs = _frightenedLength - _frightenedElapsed;
+            return Mathf.FloorToInt (floatSecs / _blinkLength);
+        }
+
         protected override int GetSourceX ()
         {
+            if (_ghostState == GhostState.FRIGHTENED) {
+                int periods = PeriodsUntilFrightenedElapsed ();
+                if ((periods > _numBlinks) || (periods % 2 == 0)) {
+                    return 32;
+                } else {
+                    return 40;
+                }
+            }
+
             switch (_name) {
             case GhostName.BLINKY:
-                return 40;
-            case GhostName.PINKY:
-                return 48;
-            case GhostName.INKY:
-                return 56;
-            case GhostName.CLYDE:
                 return 0;
+            case GhostName.PINKY:
+                return 8;
+            case GhostName.INKY:
+                return 16;
+            case GhostName.CLYDE:
+                return 24;
             default:
                 return 0;
             }
@@ -75,13 +102,16 @@ namespace BDG
 
         protected override int GetSourceY ()
         {
+            if (_ghostState == GhostState.FRIGHTENED) {
+                return 0;
+            }
+
             switch (_name) {
             case GhostName.BLINKY:
             case GhostName.PINKY:
             case GhostName.INKY:
-                return 8;
             case GhostName.CLYDE:
-                return 0;
+                return 8;
             default:
                 return 0;
             }
@@ -89,25 +119,55 @@ namespace BDG
 
         protected override void ReachedStop ()
         {
-            Debug.Log ("Ghost reached stop");
+            Debug.LogFormat ("Ghost {0} reached stop in state {1}", _name, _ghostState);
 
-            switch (_name) {
-            case GhostName.BLINKY:
-                BlinkyBrain ();
+            switch (_ghostState) {
+            case GhostState.SCATTER:
+                ScatterBrain ();
                 return;
-            case GhostName.PINKY:
-                PinkyBrain ();
-                return;
-            case GhostName.INKY:
-                InkyBrain ();
-                return;
-            case GhostName.CLYDE:
-                ClydeBrain ();
-                return;
-            default:
+            case GhostState.CHASE:
+                switch (_name) {
+                case GhostName.BLINKY:
+                    BlinkyBrain ();
+                    return;
+                case GhostName.PINKY:
+                    PinkyBrain ();
+                    return;
+                case GhostName.INKY:
+                    InkyBrain ();
+                    return;
+                case GhostName.CLYDE:
+                    ClydeBrain ();
+                    return;
+                default:
+                    RandomBrain ();
+                    return;
+                }
+            case GhostState.FRIGHTENED:
                 RandomBrain ();
-                return;
+                break;
+            case GhostState.RETURN:
+                ReturnBrain ();
+                break;
+            case GhostState.CAGED:
+                CagedBrain ();
+                break;
             }
+        }
+
+        private void CagedBrain ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        private void ReturnBrain ()
+        {
+            throw new NotImplementedException ();
+        }
+
+        private void ScatterBrain ()
+        {
+            MoveToTarget (_homeXPixel, _homeYPixel);
         }
 
         public void SetState (GhostState gs)
@@ -125,11 +185,48 @@ namespace BDG
 
                 List<MovementDirection> dirs = tile.GetLegalDirections ();
 
-                var mi = UnityEngine.Random.Range (0, dirs.Count);
-                MoveDir = dirs [mi];
+                //var mi = UnityEngine.Random.Range (0, dirs.Count);
+                //MoveDir = dirs [mi];
+
+                MoveDir = dirs [0];
                 SetStops (MoveDir, XPos, YPos);
                 Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
             }
+
+            switch (_ghostState) {
+            case GhostState.CHASE:
+                _chaseElapsed += dt;
+                if (_chaseElapsed >= _chaseLength) {
+                    MoveDir = Character.OppositeMoveDirection (MoveDir);
+                    SetStops (MoveDir, XPos, YPos);
+                    _ghostState = GhostState.SCATTER;
+                    _chaseElapsed = 0.0f;
+                    _scatterElapsed = 0.0f;
+                    _frightenedElapsed = 0.0f;
+                }
+                break;
+            case GhostState.SCATTER:
+                _scatterElapsed += dt;
+                if (_scatterElapsed >= _scatterLength) {
+                    MoveDir = Character.OppositeMoveDirection (MoveDir);
+                    SetStops (MoveDir, XPos, YPos);
+                    _ghostState = GhostState.CHASE;
+                    _chaseElapsed = 0.0f;
+                    _scatterElapsed = 0.0f;
+                    _frightenedElapsed = 0.0f;
+                }
+                break;
+            case GhostState.FRIGHTENED:
+                _frightenedElapsed += dt;
+                if (_frightenedElapsed >= _frightenedLength) {
+                    _ghostState = GhostState.CHASE;
+                    _chaseElapsed = 0.0f;
+                    _scatterElapsed = 0.0f;
+                    _frightenedElapsed = 0.0f;
+                }
+                break;
+            }
+
 
             base.Update (dt);
         }
@@ -239,14 +336,19 @@ namespace BDG
                 ty = pacY;
                 Debug.LogFormat ("steering to pac");
             } else {
-                tx = _homeX;
-                ty = _homeY;
+                tx = _homeXPixel;
+                ty = _homeYPixel;
                 Debug.LogFormat ("steering home");
             }
 
             MoveToTarget (tx, ty);
         }
 
+        /// <summary>
+        /// Moves to target.
+        /// </summary>
+        /// <param name="targetX">Target x pixel Coordinate.</param>
+        /// <param name="targetY">Target y pixel coordinate.</param>
         private void MoveToTarget (float targetX, float targetY)
         {
             var mm = MapManager.MapMgrSingleton;
@@ -277,8 +379,7 @@ namespace BDG
 
             MoveDir = bestDir;
             SetStops (MoveDir, XPos, YPos);
-            Debug.LogFormat ("Pinkybrain for Ghost {0} new dir: {1}", _name, MoveDir);
-
+            Debug.LogFormat ("{0} Moving {1}", _name, MoveDir);
         }
     }
 }

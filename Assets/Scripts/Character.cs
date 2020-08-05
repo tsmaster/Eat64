@@ -156,21 +156,18 @@ namespace BDG
 
         protected void SetStops (MovementDirection dir, float x, float y)
         {
-            int ix = 8 * tileFromPixel (x);
-            int iy = 8 * tileFromPixel (y);
-
             switch (dir) {
             case MovementDirection.EAST:
-                _stopX = ix + 8;
+                _stopX = 8 * Mathf.CeilToInt((x+0.01f) / 8.0f);
                 break;
             case MovementDirection.NORTH:
-                _stopY = iy + 8;
+                _stopY = 8 * Mathf.CeilToInt ((y+0.01f) / 8.0f);
                 break;
             case MovementDirection.WEST:
-                _stopX = ix - 8;
+                _stopX = 8 * Mathf.FloorToInt ((x-0.01f) / 8.0f);
                 break;
             case MovementDirection.SOUTH:
-                _stopY = iy - 8;
+                _stopY = 8 * Mathf.FloorToInt ((y - 0.01f) / 8.0f);
                 break;
             }
         }
