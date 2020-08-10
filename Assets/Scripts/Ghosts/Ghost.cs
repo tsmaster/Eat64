@@ -24,30 +24,36 @@ namespace BDG
         }
 
         GhostName _name;
-        GhostState _ghostState;
-
         float _scatterLength;
         float _scatterElapsed;
         float _chaseLength;
         float _chaseElapsed;
         float _frightenedLength;
         float _frightenedElapsed;
+        float _cagedLength;
+        float _cagedElapsed;
         float _blinkLength;
         int _numBlinks;
 
         int _homeXPixel;
         int _homeYPixel;
 
+        public GhostState State { get; private set; }
+
         public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos) : base(spritesheet, 8,  8, xPos, yPos)
         {
             _name = name;
-            _ghostState = GhostState.SCATTER;
+            State = GhostState.SCATTER;
             _scatterLength = 10.0f;
             _scatterElapsed = 0.0f;
             _chaseLength = 8.0f;
             _chaseElapsed = 0.0f;
             _frightenedLength = 6.0f;
             _frightenedElapsed = 0.0f;
+
+            _cagedLength = 1.5f;
+            _cagedElapsed = 0.0f;
+
             _blinkLength = 0.4f;
             _numBlinks = 4;
 
@@ -59,8 +65,12 @@ namespace BDG
 
         internal void SetFrightened ()
         {
-            _ghostState = GhostState.FRIGHTENED;
-            _frightenedElapsed = 0.0f; // TODO what if I'm already frightened?
+            if ((State == GhostState.CHASE) ||
+                (State == GhostState.SCATTER) ||
+                (State == GhostState.FRIGHTENED)) {
+                State = GhostState.FRIGHTENED;
+                _frightenedElapsed = 0.0f;
+            }
         }
 
         public void SetHomeTile (int homeTileX, int homeTileY)
@@ -77,13 +87,16 @@ namespace BDG
 
         protected override int GetSourceX ()
         {
-            if (_ghostState == GhostState.FRIGHTENED) {
+            if (State == GhostState.FRIGHTENED) {
                 int periods = PeriodsUntilFrightenedElapsed ();
                 if ((periods > _numBlinks) || (periods % 2 == 0)) {
                     return 32;
                 } else {
                     return 40;
                 }
+            }
+            if (State == GhostState.RETURN) {
+                return 48;
             }
 
             switch (_name) {
@@ -102,7 +115,10 @@ namespace BDG
 
         protected override int GetSourceY ()
         {
-            if (_ghostState == GhostState.FRIGHTENED) {
+            if (State == GhostState.FRIGHTENED) {
+                return 0;
+            }
+            if (State == GhostState.RETURN) {
                 return 0;
             }
 
@@ -119,9 +135,9 @@ namespace BDG
 
         protected override void ReachedStop ()
         {
-            Debug.LogFormat ("Ghost {0} reached stop in state {1}", _name, _ghostState);
+            Debug.LogFormat ("Ghost {0} reached stop in state {1}", _name, State);
 
-            switch (_ghostState) {
+            switch (State) {
             case GhostState.SCATTER:
                 ScatterBrain ();
                 return;
@@ -157,12 +173,54 @@ namespace BDG
 
         private void CagedBrain ()
         {
-            throw new NotImplementedException ();
+            var curTile = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
+
+            Debug.LogFormat ("in cage tile {0}", curTile.Name);
+
+            Debug.LogFormat ("check cage time {0} vs limit {1}", _cagedElapsed, _cagedLength);
+
+            if (_cagedElapsed >= _cagedLength) {
+                Debug.LogFormat ("cage dur elapsed");
+                MoveDir = MovementDirection.NORTH;
+                State = GhostState.SCATTER;
+                _scatterElapsed = 0.0f;
+                _cagedElapsed = 0.0f;
+            } else {
+                MoveDir = curTile.InCageDir;
+                Debug.LogFormat ("moving in dir {0}", MoveDir);
+            }
+            SetStops (MoveDir, XPos, YPos);
         }
 
         private void ReturnBrain ()
         {
-            throw new NotImplementedException ();
+            var curTile = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
+            if (curTile.IsCage) {
+                State = GhostState.CAGED;
+                _cagedElapsed = 0.0f;
+                return;
+            }
+
+            var moveDirs = curTile.GetLegalDirectionsForChar (this);
+
+            var bestDir = moveDirs [0];
+            int bestDist = 6000;
+
+            foreach (var md in moveDirs) {
+                var nt = curTile.NeighborInDirection (md);
+                if (nt == null) {
+                    Debug.LogFormat ("got null neighbor of {0} in direction {1}", curTile.Name, md);
+                    continue;
+                }
+                var ntdth = nt.DistToHome;
+                if (ntdth < bestDist) {
+                    bestDir = md;
+                    bestDist = ntdth;
+                }
+            }
+
+            MoveDir = bestDir;
+            SetStops (MoveDir, XPos, YPos);
         }
 
         private void ScatterBrain ()
@@ -172,18 +230,28 @@ namespace BDG
 
         public void SetState (GhostState gs)
         {
-            _ghostState = gs;
+            State = gs;
         }
 
         public override void Update (float dt)
         {
+            var pm = PacMan.PacManSingleton;
+
+            if (pm.IsAlive && CollidedWithPacMan ()) {
+                if (State == GhostState.FRIGHTENED) {
+                    State = GhostState.RETURN;
+                } else if (State != GhostState.RETURN) {
+                    pm.Kill ();
+                }
+            }
+
             if (MoveDir == MovementDirection.NONE) {
                 Debug.LogFormat ("Ghost {0} updating when stopped", _name);
                 var mm = MapManager.MapMgrSingleton;
 
                 var tile = mm.GetTileForPixel (XPos, YPos);
 
-                List<MovementDirection> dirs = tile.GetLegalDirections ();
+                List<MovementDirection> dirs = tile.GetLegalDirectionsForChar (this);
 
                 //var mi = UnityEngine.Random.Range (0, dirs.Count);
                 //MoveDir = dirs [mi];
@@ -193,13 +261,13 @@ namespace BDG
                 Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
             }
 
-            switch (_ghostState) {
+            switch (State) {
             case GhostState.CHASE:
                 _chaseElapsed += dt;
                 if (_chaseElapsed >= _chaseLength) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
-                    _ghostState = GhostState.SCATTER;
+                    State = GhostState.SCATTER;
                     _chaseElapsed = 0.0f;
                     _scatterElapsed = 0.0f;
                     _frightenedElapsed = 0.0f;
@@ -210,7 +278,7 @@ namespace BDG
                 if (_scatterElapsed >= _scatterLength) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
-                    _ghostState = GhostState.CHASE;
+                    State = GhostState.CHASE;
                     _chaseElapsed = 0.0f;
                     _scatterElapsed = 0.0f;
                     _frightenedElapsed = 0.0f;
@@ -219,16 +287,29 @@ namespace BDG
             case GhostState.FRIGHTENED:
                 _frightenedElapsed += dt;
                 if (_frightenedElapsed >= _frightenedLength) {
-                    _ghostState = GhostState.CHASE;
+                    State = GhostState.CHASE;
                     _chaseElapsed = 0.0f;
                     _scatterElapsed = 0.0f;
                     _frightenedElapsed = 0.0f;
                 }
                 break;
+            case GhostState.CAGED:
+                _cagedElapsed += dt;
+                break;
             }
 
 
             base.Update (dt);
+        }
+
+        private bool CollidedWithPacMan ()
+        {
+            var pm = PacMan.PacManSingleton;
+
+            var dx = pm.XPos - XPos;
+            var dy = pm.YPos - YPos;
+
+            return Mathf.Abs (dx) + Mathf.Abs (dy) < 4;
         }
 
         private void RandomBrain ()
@@ -237,9 +318,15 @@ namespace BDG
 
             var tile = mm.GetTileForPixel (XPos, YPos);
 
+            if (tile == null) {
+                Debug.LogFormat ("no tile for pos {0} {1}", XPos, YPos);
+                MoveDir = MovementDirection.NONE;
+                return;
+            }
+
             Debug.LogFormat ("at tile {0} {1} {2}", XPos, YPos, tile.Name);
 
-            List<MovementDirection> dirs = tile.GetLegalDirections ();
+            List<MovementDirection> dirs = tile.GetLegalDirectionsForChar (this);
             dirs.Remove (Character.OppositeMoveDirection (MoveDir));
 
             foreach (var d in dirs) {
@@ -354,7 +441,7 @@ namespace BDG
             var mm = MapManager.MapMgrSingleton;
             var tile = mm.GetTileForPixel (XPos, YPos);
 
-            List<MovementDirection> dirs = tile.GetLegalDirections ();
+            List<MovementDirection> dirs = tile.GetLegalDirectionsForChar (this);
             dirs.Remove (Character.OppositeMoveDirection (MoveDir));
 
             float bestDistance = -1.0f;

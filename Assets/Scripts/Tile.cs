@@ -9,20 +9,31 @@ namespace BDG
         Texture2D _srcTexture;
         private int _srcX;
         private int _srcY;
-
-        private bool[] _moveBits;
+        private bool [] _moveBits;
 
         public string Name { get; internal set; }
+        public int DistToHome { get; internal set; }
+        public int TileX { get; }
+        public int TileY { get; }
 
-        public Tile (Texture2D srcTexture, int srcX, int srcY, 
+        public bool IsCage { get; internal set; }
+        public MovementDirection InCageDir { get; internal set; }
+
+        public Tile (Texture2D srcTexture, int texSrcX, int texSrcY, int tileX, int tileY, 
             bool canMoveEast,
             bool canMoveNorth,
             bool canMoveWest,
             bool canMoveSouth)
         {
             _srcTexture = srcTexture;
-            _srcX = srcX;
-            _srcY = srcY;
+            _srcX = texSrcX;
+            _srcY = texSrcY;
+
+            TileX = tileX;
+            TileY = tileY;
+
+            IsCage = false;
+            InCageDir = MovementDirection.NONE;
 
             //Debug.LogFormat ("making tile with src x {0} y {1}", _srcX, _srcY);
 
@@ -39,8 +50,27 @@ namespace BDG
                 destX, destY);
         }
 
-        public bool CanMoveInDirection (MovementDirection dir)
+        public bool CanCharMoveInDirection (Character c, MovementDirection dir)
         {
+            bool charIsGhost = c is Ghost;
+
+            var nt = NeighborInDirection (dir);
+            if ((nt == null) &&
+                (charIsGhost)) {
+                return false;
+            }
+
+            if (charIsGhost) {
+                var gc = c as Ghost;
+                if (IsCage) {
+                    if (gc.State == Ghost.GhostState.CAGED) {
+                        return dir == InCageDir;
+                    } else {
+                        return (dir == MovementDirection.NORTH);
+                    }
+                }
+            }
+
             switch (dir) {
             case MovementDirection.NONE:
                 return false;
@@ -51,13 +81,21 @@ namespace BDG
             case MovementDirection.WEST:
                 return _moveBits [2];
             case MovementDirection.SOUTH:
+                if (charIsGhost) {
+                    var g = c as Ghost;
+                    if ((g.State == Ghost.GhostState.RETURN) &&
+                        (nt.IsCage)) {
+                        return true;
+                    }
+                }
+
                 return _moveBits [3];
             default:
                 return false;
             }
         }
 
-        public static Tile MakeTile (Texture2D srcTexture, int tileIndex)
+        public static Tile MakeTile (Texture2D srcTexture, int tileIndex, int tileX, int tileY)
         {
             int tcX = tileIndex % 8;
             int tcY = tileIndex / 8;
@@ -125,31 +163,73 @@ namespace BDG
                 break;
             }
 
-
-            var tile = new Tile (srcTexture, tx, ty,
+            var tile = new Tile (srcTexture, tx, ty, tileX, tileY,
                 cmEast,
                 cmNorth,
                 cmWest,
                 cmSouth);
 
-            tile.Name = String.Format ("t {0} {1} {2} {3} {4}", tileIndex, cmEast, cmNorth, cmWest, cmSouth);
+            tile.Name = String.Format ("t {0} ({5} {6}) / {1} {2} {3} {4}", tileIndex, cmEast, cmNorth, cmWest, cmSouth, tileX, tileY);
 
             return tile;
         }
 
-        internal List<MovementDirection> GetLegalDirections ()
+        internal bool CanGhostMoveInDirection (MovementDirection dir)
+        {
+            var nt = NeighborInDirection (dir);
+            if (nt == null) {
+                return false;
+            }
+
+            switch (dir) {
+            case MovementDirection.NONE:
+                return false;
+            case MovementDirection.EAST:
+                return _moveBits [0];
+            case MovementDirection.NORTH:
+                return _moveBits [1];
+            case MovementDirection.WEST:
+                return _moveBits [2];
+            case MovementDirection.SOUTH:
+                return _moveBits [3];
+            default:
+                return false;
+            }
+        }
+
+        internal Tile NeighborInDirection (MovementDirection md)
+        {
+            var mm = MapManager.MapMgrSingleton;
+
+            switch (md) {
+            case MovementDirection.NONE:
+                return this;
+            case MovementDirection.EAST:
+                return mm.GetTileAt (TileX + 1, TileY);
+            case MovementDirection.NORTH:
+                return mm.GetTileAt (TileX, TileY - 1);
+            case MovementDirection.WEST:
+                return mm.GetTileAt (TileX - 1, TileY);
+            case MovementDirection.SOUTH:
+                return mm.GetTileAt (TileX, TileY + 1);
+            default:
+                return null;
+            }
+        }
+
+        internal List<MovementDirection> GetLegalDirectionsForChar (Character c)
         {
             var dirList = new List<MovementDirection> ();
-            if (CanMoveInDirection (MovementDirection.EAST)) {
+            if (CanCharMoveInDirection (c, MovementDirection.EAST)) {
                 dirList.Add (MovementDirection.EAST);
             }
-            if (CanMoveInDirection (MovementDirection.NORTH)) {
+            if (CanCharMoveInDirection (c, MovementDirection.NORTH)) {
                 dirList.Add (MovementDirection.NORTH);
             }
-            if (CanMoveInDirection (MovementDirection.WEST)) {
+            if (CanCharMoveInDirection (c, MovementDirection.WEST)) {
                 dirList.Add (MovementDirection.WEST);
             }
-            if (CanMoveInDirection (MovementDirection.SOUTH)) {
+            if (CanCharMoveInDirection (c, MovementDirection.SOUTH)) {
                 dirList.Add (MovementDirection.SOUTH);
             }
             return dirList;

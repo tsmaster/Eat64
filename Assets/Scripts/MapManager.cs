@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using UnityEngine;
 
 namespace BDG
@@ -33,6 +34,18 @@ namespace BDG
 
         public Tile GetTileAt (int tx, int ty)
         {
+            Debug.LogFormat ("getting tile at {0} {1}", tx, ty);
+            if ((tx < 0) || (tx >= 8) ||
+                (ty < 0) || (ty >= 8)) {
+                Debug.LogFormat ("out of range");
+                return null;
+            }
+            var t = _tiles [ty, tx];
+            if (t == null) {
+                Debug.LogError ("null tile");
+            } else {
+                Debug.LogFormat ("found tile {0}", t.Name);
+            }
             return _tiles [ty, tx];
         }
 
@@ -48,6 +61,60 @@ namespace BDG
         {
             homeXPixel = 8 * homeTileX;
             homeYPixel = 56 - (8 * homeTileY);
+        }
+
+        public void MakeDistToHomeValues ()
+        {
+            foreach (var t in _tiles) {
+                if (t != null) {
+                    t.DistToHome = -1;
+                }
+            }
+
+            var houseLeft = GetTileAt (3, 3);
+            houseLeft.DistToHome = 0;
+            houseLeft.IsCage = true;
+            houseLeft.InCageDir = MovementDirection.EAST;
+            var houseRight = GetTileAt (4, 3);
+            houseRight.DistToHome = 0;
+            houseRight.IsCage = true;
+            houseRight.InCageDir = MovementDirection.WEST;
+            var exitLeft = GetTileAt (3, 2);
+            exitLeft.DistToHome = 1;
+            var exitRight = GetTileAt (4, 2);
+            exitRight.DistToHome = 1;
+
+            List<Tile> openTiles = new List<Tile> { exitLeft, exitRight };
+
+            List<MovementDirection> moveDirs = new List<MovementDirection> {
+                MovementDirection.EAST,
+                MovementDirection.NORTH,
+                MovementDirection.WEST,
+                MovementDirection.SOUTH };
+
+            while (openTiles.Count > 0) {
+                var t = openTiles [0];
+                openTiles.RemoveAt (0);
+                foreach (var md in moveDirs) {
+                    if (t.CanGhostMoveInDirection (md)) {
+                        var nextTile = t.NeighborInDirection (md);
+                        if (nextTile == null) {
+                            continue;
+                        }
+                        if (nextTile.DistToHome == -1) {
+                            nextTile.DistToHome = t.DistToHome + 1;
+                            openTiles.Add (nextTile);
+
+                            Debug.LogFormat ("Setting tile at {0} {1} to dist {2}", nextTile.TileX, nextTile.TileY, nextTile.DistToHome);
+                        }
+                    }
+                }
+            }
+        }
+
+        internal void ResetTiles ()
+        {
+            _tiles = new Tile [8, 8];
         }
     }
 }

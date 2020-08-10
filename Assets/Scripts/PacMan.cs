@@ -15,14 +15,19 @@ namespace BDG
         {
             _queuedMovementDirection = MovementDirection.NONE;
             Speed = 12.0f;
+            IsAlive = true;
         }
 
         public static PacMan PacManSingleton {get; set;}
+        public bool IsAlive { get; internal set; }
 
         public void QueueMovementDirection (MovementDirection dir)
         {
             _queuedMovementDirection = dir;
-            if (MoveDir == MovementDirection.NONE) {
+
+            var t = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
+            if ((MoveDir == MovementDirection.NONE) &&
+                (t.CanCharMoveInDirection (this, dir))) {
                 MoveDir = dir;
                 SetStops (dir, XPos, YPos);
             }
@@ -30,6 +35,10 @@ namespace BDG
 
         protected override int GetSourceX ()
         {
+            if (!IsAlive) {
+                return 56;
+            }
+
             if ((!_mouthOpen) || (MoveDir == MovementDirection.NONE)) {
                 // draw mouth closed
                 return 0;
@@ -50,6 +59,10 @@ namespace BDG
 
         protected override int GetSourceY ()
         {
+            if (!IsAlive) {
+                return 0;
+            }
+
             return 8;
         }
 
@@ -80,18 +93,30 @@ namespace BDG
 
             var tile = mapMgr.GetTileAt (tx, ty);
 
+            if (tile == null) {
+                // entered tunnel
+                Debug.LogFormat ("Pac man entered tunnel");
+                MoveDir = MovementDirection.NONE;
+                return;
+            }
+
             Debug.LogFormat ("tile: {0}", tile.Name);
 
             Debug.LogFormat ("existing movedir: {0}", MoveDir);
 
-            if (tile.CanMoveInDirection (_queuedMovementDirection)) {
+            if (tile.CanCharMoveInDirection (this, _queuedMovementDirection)) {
                 Debug.LogFormat ("can move in queued dir: {0}", _queuedMovementDirection);
                 MoveDir = _queuedMovementDirection;
-            } else if (!tile.CanMoveInDirection (MoveDir)) {
+            } else if (!tile.CanCharMoveInDirection (this, MoveDir)) {
                 Debug.LogFormat ("can move in current movedir: {0}", MoveDir);
                 MoveDir = MovementDirection.NONE;
             }
             SetStops (MoveDir, XPos, YPos);
+        }
+
+        internal void Kill ()
+        {
+            IsAlive = false;
         }
     }
 }

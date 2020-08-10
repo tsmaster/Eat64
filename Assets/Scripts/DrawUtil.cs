@@ -43,5 +43,10 @@ namespace BDG
                 }
             }
         }
+
+        internal static void SetPixel (Texture2D displayTexture, int px, int py, Color drawColor)
+        {
+            displayTexture.SetPixel (px, py, drawColor);
+        }
     }
 }

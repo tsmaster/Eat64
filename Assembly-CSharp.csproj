@@ -55,10 +55,17 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+     <Compile Include="Assets\Scripts\BigMapManager.cs" />
+     <Compile Include="Assets\Scripts\BigTile.cs" />
+     <Compile Include="Assets\Scripts\BigTileCell.cs" />
      <Compile Include="Assets\Scripts\Character.cs" />
+     <Compile Include="Assets\Scripts\ChunkBreaker.cs" />
+     <Compile Include="Assets\Scripts\Constraints\ConstraintMap.cs" />
+     <Compile Include="Assets\Scripts\Constraints\ConstraintState.cs" />
      <Compile Include="Assets\Scripts\DotManager.cs" />
      <Compile Include="Assets\Scripts\DrawUtil.cs" />
      <Compile Include="Assets\Scripts\Game.cs" />
+     <Compile Include="Assets\Scripts\GameStateMgr.cs" />
      <Compile Include="Assets\Scripts\Ghosts\Ghost.cs" />
      <Compile Include="Assets\Scripts\Ghosts\GhostManager.cs" />
      <Compile Include="Assets\Scripts\MapManager.cs" />
