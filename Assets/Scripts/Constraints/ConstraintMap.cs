@@ -4,7 +4,7 @@ using UnityEngine;
 
 namespace BDG
 {
-    internal class ConstraintMap
+    internal class ConstraintMap : IBaseMapGenerator
     {
         private int _mapX;
         private int _mapY;
@@ -38,9 +38,11 @@ namespace BDG
             if (exitWest && exitEast) {
                 _lrSymmetry = true;
             }
+            /*
+             * bleh, I give up on ns symmetry.           
             if (exitNorth && exitSouth) {
                 _nsSymmetry = true;
-            }
+            }*/
 
             string name = string.Format ("cm {0} {1}", _mapX, _mapY);
             var h = name.GetHashCode ();
@@ -89,6 +91,17 @@ namespace BDG
                     var workStateClone = workState.Clone ();
                     workStateClone.ConstrainWithSymmetry (cx, cy, tileIndex, _lrSymmetry, _nsSymmetry);
                     workStateClone.Tighten ();
+
+                    // check if we've closed off the maze too early
+                    bool foundUnlocked = workStateClone.FloodFillFromLocReachedUnlockedLoc (cx, cy, out int visitedCount);
+
+                    if ((!foundUnlocked) &&
+                        (visitedCount < 62)) {
+                        // closed loop
+                        Debug.LogFormat ("could not find unlocked location, vis count {0}", visitedCount);
+                        continue;
+                    }
+
                     if (!workStateClone.IsOverTight ()) {
                         _constraintStates.Insert (0, workStateClone);
                     }
@@ -98,9 +111,9 @@ namespace BDG
             return false;
         }
 
-        internal int GetTileIndex (int x, int y)
+        public int GetTileIndex (int x, int y)
         {
-            Debug.LogFormat ("getting tile index for {0} {1}", x, y);
+            //Debug.LogFormat ("getting tile index for {0} {1}", x, y);
             var ts = _foundSolution._tileSets [y, x];
             if (ts == null) {
                 Debug.LogError ("null tile set");

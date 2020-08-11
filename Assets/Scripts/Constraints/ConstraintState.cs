@@ -85,17 +85,94 @@ namespace BDG
                 for (int y = 0; y < 8; ++y) {
                     var ts = _tileSets [y, x];
                     if (ts == null) {
+                        Debug.Assert (ts != null);
                         return false;
                     }
                     if (ts.Count != 1) {
+                        Debug.Assert (ts.Count == 1);
                         return false;
                     }
                 }
             }
 
-            // TODO check to see if a flood fill hits all squares
+            // check to see if a flood fill hits all squares
+
+            if (CountFloodFill () < 62) {
+                return false;
+            }
 
             return true;
+        }
+
+        public bool FloodFillFromLocReachedUnlockedLoc (int x, int y, out int visitedCount)
+        {
+            List<KeyValuePair<int, int>> frontier = new List<KeyValuePair<int, int>> {
+                new KeyValuePair<int, int> (x, y)
+            };
+
+            List<KeyValuePair<int, int>> visited = new List<KeyValuePair<int, int>> ();
+
+            while (frontier.Count > 0) {
+                var workNode = frontier [0];
+                frontier.RemoveAt (0);
+                visited.Add (workNode);
+
+                var wx = workNode.Key;
+                var wy = workNode.Value;
+
+                //Debug.LogFormat ("Checking {0} {1}", wx, wy);
+
+                if (_isLocked [wy, wx]) {
+                    visitedCount = visited.Count;
+                    return true;
+                }
+
+                foreach (var md in MapManager.MoveDirections ()) {
+                    var nx = wx;
+                    var ny = wy;
+
+                    if (!CanMoveInDirForTileIndex (md, _tileSets [ny, nx] [0])) {
+                        continue;
+                    }
+
+                    switch (md) {
+                    case MovementDirection.EAST:
+                        nx = wx + 1;
+                        break;
+                    case MovementDirection.NORTH:
+                        ny = wy - 1;
+                        break;
+                    case MovementDirection.WEST:
+                        nx = wx - 1;
+                        break;
+                    case MovementDirection.SOUTH:
+                        ny = wy + 1;
+                        break;
+                    }
+
+                    if ((nx < 0) || (nx >= 8) ||
+                        (ny < 0) || (ny >= 8)) {
+                        continue;
+                    }
+
+                    var newLoc = new KeyValuePair<int, int> (nx, ny);
+                    if ((visited.Contains (newLoc)) ||
+                        (frontier.Contains (newLoc))) {
+                        continue;
+                    }
+                    frontier.Add (newLoc);
+                }
+            }
+
+            Debug.LogFormat ("Final count: {0}", visited.Count);
+            visitedCount = visited.Count;
+            return false;
+        }
+
+        int CountFloodFill ()
+        {
+            var unlocked = FloodFillFromLocReachedUnlockedLoc (0, 0, out int count);
+            return count;
         }
 
         internal void FindMostConstrainedLoc (out int cx, out int cy)
@@ -130,7 +207,7 @@ namespace BDG
 
         internal void ConstrainWithSymmetry (int cx, int cy, int tileIndex, bool lrSymmetry, bool nsSymmetry)
         {
-            Debug.LogFormat ("constraining with symmetry {0} {1} tile {2} lr {3} ns {4}", cx, cy, tileIndex, lrSymmetry, nsSymmetry);
+            //Debug.LogFormat ("constraining with symmetry {0} {1} tile {2} lr {3} ns {4}", cx, cy, tileIndex, lrSymmetry, nsSymmetry);
             ConstrainLoc (cx, cy, tileIndex);
 
             var mx = 7 - cx;
@@ -326,8 +403,6 @@ namespace BDG
         internal void ConstrainWalls (int x, int y, int tileIndex)
         {
             //Debug.LogFormat ("Constraining loc {0} {1} tile {2}", x, y, tileIndex);
-            Debug.Assert (_isLocked [y, x] == false);
-
             List<MovementDirection> moveDirs = new List<MovementDirection> {
                 MovementDirection.EAST,
                 MovementDirection.NORTH,

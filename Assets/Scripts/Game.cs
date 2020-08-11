@@ -32,17 +32,20 @@ namespace BDG
         PacMan pacMan;
 
         // known good 2,4
+
+        // good 0, 0
+        // good 0, 1 - no symmetry, got a nullref in random brain?
+        // good 0, 2
+
         // good gen 1, 4 - l/r symmetry
         // good gen 2, 2 - no symmetry
         // good gen 2, 3 - l/r symmetry
-        // good 0, 1 - no symmetry, got a nullref in random brain?
 
-        // almost good 0, 0  - not connected
         // almost good 0, 4 - ns symmetry, unreachable area
         // almost good 1, 1 - 4x symmetry, unreachable
 
         int bigMapX = 0;
-        int bigMapY = 2;
+        int bigMapY = 4;
 
         // Start is called before the first frame update
         void Start ()
@@ -83,15 +86,17 @@ namespace BDG
             }
 
             var cm = new ConstraintMap (bmx, bmy);
+            IBaseMapGenerator mapGen = cm;
             var didConstrain = cm.Constrain ();
 
             if (!didConstrain) {
-                Debug.LogError ("did not constrain");
+                Debug.LogWarning ("did not constrain");
+                mapGen = new FallbackMap (bmx, bmy);
             }
 
             for (int x = 0; x < 8; ++x) {
                 for (int y = 0; y < 8; ++y) {
-                    var tileIndex = cm.GetTileIndex (x, y);
+                    var tileIndex = mapGen.GetTileIndex (x, y);
                     Tile tile = Tile.MakeTile (spriteSheet, tileIndex, x, y);
                     MapManager.MapMgrSingleton.SetTile (x, y, tile);
                 }

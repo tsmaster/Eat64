@@ -62,6 +62,8 @@
      <Compile Include="Assets\Scripts\ChunkBreaker.cs" />
      <Compile Include="Assets\Scripts\Constraints\ConstraintMap.cs" />
      <Compile Include="Assets\Scripts\Constraints\ConstraintState.cs" />
+     <Compile Include="Assets\Scripts\Constraints\FallbackMap.cs" />
+     <Compile Include="Assets\Scripts\Constraints\IBaseMapGenerator.cs" />
      <Compile Include="Assets\Scripts\DotManager.cs" />
      <Compile Include="Assets\Scripts\DrawUtil.cs" />
      <Compile Include="Assets\Scripts\Game.cs" />

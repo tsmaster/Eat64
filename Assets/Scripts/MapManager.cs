@@ -116,5 +116,15 @@ namespace BDG
         {
             _tiles = new Tile [8, 8];
         }
+
+        public static List<MovementDirection> MoveDirections ()
+        {
+            return new List<MovementDirection> {
+                MovementDirection.EAST,
+                MovementDirection.NORTH,
+                MovementDirection.WEST,
+                MovementDirection.SOUTH 
+                };
+        }
     }
 }
