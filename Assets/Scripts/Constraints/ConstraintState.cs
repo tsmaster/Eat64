@@ -97,7 +97,9 @@ namespace BDG
 
             // check to see if a flood fill hits all squares
 
+            int cff = CountFloodFill ();
             if (CountFloodFill () < 62) {
+                Debug.LogFormat ("reachable: {0}", cff);
                 return false;
             }
 
@@ -122,7 +124,7 @@ namespace BDG
 
                 //Debug.LogFormat ("Checking {0} {1}", wx, wy);
 
-                if (_isLocked [wy, wx]) {
+                if (!_isLocked [wy, wx]) {
                     visitedCount = visited.Count;
                     return true;
                 }

@@ -114,6 +114,11 @@ namespace BDG
             SetStops (MoveDir, XPos, YPos);
         }
 
+        internal void Stop ()
+        {
+            MoveDir = MovementDirection.NONE;
+        }
+
         internal void Kill ()
         {
             IsAlive = false;

@@ -34,17 +34,17 @@ namespace BDG
 
         public Tile GetTileAt (int tx, int ty)
         {
-            Debug.LogFormat ("getting tile at {0} {1}", tx, ty);
+            //Debug.LogFormat ("getting tile at {0} {1}", tx, ty);
             if ((tx < 0) || (tx >= 8) ||
                 (ty < 0) || (ty >= 8)) {
-                Debug.LogFormat ("out of range");
+                Debug.LogFormat ("out of range: {0} {1}", tx, ty);
                 return null;
             }
             var t = _tiles [ty, tx];
             if (t == null) {
                 Debug.LogError ("null tile");
             } else {
-                Debug.LogFormat ("found tile {0}", t.Name);
+                //Debug.LogFormat ("found tile {0}", t.Name);
             }
             return _tiles [ty, tx];
         }
@@ -105,7 +105,7 @@ namespace BDG
                             nextTile.DistToHome = t.DistToHome + 1;
                             openTiles.Add (nextTile);
 
-                            Debug.LogFormat ("Setting tile at {0} {1} to dist {2}", nextTile.TileX, nextTile.TileY, nextTile.DistToHome);
+                            //Debug.LogFormat ("Setting tile at {0} {1} to dist {2}", nextTile.TileX, nextTile.TileY, nextTile.DistToHome);
                         }
                     }
                 }

@@ -46,6 +46,8 @@ namespace BDG
 
         int bigMapX = 0;
         int bigMapY = 4;
+        private float _bigMazeElapsed;
+        private const float _bigMazeLength = 2.5f;
 
         // Start is called before the first frame update
         void Start ()
@@ -70,40 +72,24 @@ namespace BDG
             };
             BigMapManager.BigMapMgrSingleton = new BigMapManager ();
 
-
             InitializeLevel (bigMapX, bigMapY);
-
-            AddDots ();
-            AddGhosts ();
         }
 
         void InitializeLevel (int bmx, int bmy) {
             MapManager.MapMgrSingleton.ResetTiles ();
+            GhostManager.GhostMgrSingleton.Clear ();
+            DotManager.DotMgrSingleton.Clear ();
+            pacMan.SetPos (28, 8);
+            pacMan.Stop ();
 
             if ((bmx == 2) && (bmy == 4)) {
                 Initialize24Level ();
-                return;
+            } else {
+                InitializeConstrainedLevel (bmx, bmy);
             }
 
-            var cm = new ConstraintMap (bmx, bmy);
-            IBaseMapGenerator mapGen = cm;
-            var didConstrain = cm.Constrain ();
-
-            if (!didConstrain) {
-                Debug.LogWarning ("did not constrain");
-                mapGen = new FallbackMap (bmx, bmy);
-            }
-
-            for (int x = 0; x < 8; ++x) {
-                for (int y = 0; y < 8; ++y) {
-                    var tileIndex = mapGen.GetTileIndex (x, y);
-                    Tile tile = Tile.MakeTile (spriteSheet, tileIndex, x, y);
-                    MapManager.MapMgrSingleton.SetTile (x, y, tile);
-                }
-            }
-
-            MapManager.MapMgrSingleton.MakeDistToHomeValues ();
-            Debug.Log ("made distances");
+            AddDots ();
+            AddGhosts ();
         }
 
         void AddDots ()
@@ -140,29 +126,31 @@ namespace BDG
             }
 
             MapManager.MapMgrSingleton.MakeDistToHomeValues ();
-            Debug.Log ("made distances");
-
-            // pellet test
-
-            for (int x = 8; x <= 48; x += 8) {
-                DotManager.DotMgrSingleton.AddDot (0, x, false);
-                DotManager.DotMgrSingleton.AddDot (56, x, false);
-                DotManager.DotMgrSingleton.AddDot (x, 0, false);
-                DotManager.DotMgrSingleton.AddDot (x, 56, false);
-            }
-
-            DotManager.DotMgrSingleton.AddDot (0, 0, true);
-            DotManager.DotMgrSingleton.AddDot (0, 56, true);
-            DotManager.DotMgrSingleton.AddDot (56, 0, true);
-            DotManager.DotMgrSingleton.AddDot (56, 56, true);
-
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.BLINKY, 40, 40, Ghost.GhostState.CHASE, 9, -1);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 24, 32, Ghost.GhostState.CAGED, -1, -1);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 28, 32, Ghost.GhostState.CAGED, -1, 9);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 32, Ghost.GhostState.CAGED, 9, 9);
+            //Debug.Log ("made distances");
         }
 
+        void InitializeConstrainedLevel (int bmx, int bmy)
+        {
+            var cm = new ConstraintMap (bmx, bmy);
+            IBaseMapGenerator mapGen = cm;
+            var didConstrain = cm.Constrain ();
 
+            if (!didConstrain) {
+                Debug.LogWarning ("did not constrain");
+                mapGen = new FallbackMap (bmx, bmy);
+            }
+
+            for (int x = 0; x < 8; ++x) {
+                for (int y = 0; y < 8; ++y) {
+                    var tileIndex = mapGen.GetTileIndex (x, y);
+                    Tile tile = Tile.MakeTile (spriteSheet, tileIndex, x, y);
+                    MapManager.MapMgrSingleton.SetTile (x, y, tile);
+                }
+            }
+
+            MapManager.MapMgrSingleton.MakeDistToHomeValues ();
+            //Debug.Log ("made distances");
+        }
 
         // Update is called once per frame
         void Update ()
@@ -234,6 +222,7 @@ namespace BDG
         void SetBigMapMode ()
         {
             GameStateMgr.GameStateMgrSingleton.CurrentGameState = GameStateMgr.GameState.BIG_MAZE;
+            _bigMazeElapsed = 0.0f;
         }
 
         #region SMALL MAZE
@@ -285,8 +274,15 @@ namespace BDG
         #region BIG MAZE
         void BigMazeUpdate (float dt)
         {
+            _bigMazeElapsed += dt;
+
             DrawBigMaze ();
             _displayTexture.Apply ();
+
+            if (_bigMazeElapsed >= _bigMazeLength) {
+                InitializeLevel (bigMapX, bigMapY);
+                GameStateMgr.GameStateMgrSingleton.CurrentGameState = GameStateMgr.GameState.SMALL_MAZE;
+            }
         }
 
         void DrawBigMaze ()

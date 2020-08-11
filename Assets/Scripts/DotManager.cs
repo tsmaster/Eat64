@@ -70,5 +70,10 @@ namespace BDG
                 }
             }
         }
+
+        internal void Clear ()
+        {
+            _dots.Clear ();
+        }
     }
 }

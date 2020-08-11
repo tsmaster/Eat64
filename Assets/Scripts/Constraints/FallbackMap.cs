@@ -8,8 +8,8 @@ namespace BDG
     {
         private System.Random _randomGenerator;
         private ConstraintState _constraintState;
-        private int _mapX;
-        private int _mapY;
+        private readonly int _mapX;
+        private readonly int _mapY;
 
         public FallbackMap (int bmx, int bmy)
         {
@@ -145,13 +145,6 @@ namespace BDG
         public int GetTileIndex (int x, int y)
         {
             var ts = _constraintState._tileSets [y, x];
-            if (ts == null) {
-                Debug.LogError ("null tile set");
-            } else if (ts.Count == 0) {
-                Debug.LogError ("empty tile set");
-            } else {
-                Debug.LogFormat ("tile: {0}", ts [0]);
-            }
 
             return ts [0];
         }

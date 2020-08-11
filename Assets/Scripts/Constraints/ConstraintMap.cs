@@ -32,6 +32,8 @@ namespace BDG
             var exitWest = BigMapManager.BigMapMgrSingleton.CanMove (bmx, bmy, MovementDirection.WEST, out dbgColor);
             var exitSouth = BigMapManager.BigMapMgrSingleton.CanMove (bmx, bmy, MovementDirection.SOUTH, out dbgColor);
 
+            Debug.LogFormat ("cm {0} {1} can exit south? {2}", bmx, bmy, exitSouth);
+
             _lrSymmetry = false;
             _nsSymmetry = false;
 
@@ -92,6 +94,7 @@ namespace BDG
                     workStateClone.ConstrainWithSymmetry (cx, cy, tileIndex, _lrSymmetry, _nsSymmetry);
                     workStateClone.Tighten ();
 
+                    /*
                     // check if we've closed off the maze too early
                     bool foundUnlocked = workStateClone.FloodFillFromLocReachedUnlockedLoc (cx, cy, out int visitedCount);
 
@@ -101,6 +104,7 @@ namespace BDG
                         Debug.LogFormat ("could not find unlocked location, vis count {0}", visitedCount);
                         continue;
                     }
+                    */
 
                     if (!workStateClone.IsOverTight ()) {
                         _constraintStates.Insert (0, workStateClone);
@@ -115,14 +119,6 @@ namespace BDG
         {
             //Debug.LogFormat ("getting tile index for {0} {1}", x, y);
             var ts = _foundSolution._tileSets [y, x];
-            if (ts == null) {
-                Debug.LogError ("null tile set");
-            } else if (ts.Count == 0) {
-                Debug.LogError ("empty tile set");
-            } else {
-                Debug.LogFormat ("tile: {0}", ts[0]);
-            }
-
             return ts [0];
         }
 
@@ -141,14 +137,6 @@ namespace BDG
 
             // right cage
             s.ConstrainLoc (4, 3, 12);
-
-            if (_nsSymmetry) {
-                // S/E 
-                s.ConstrainLoc (3, 4, 3);
-
-                // S/W 
-                s.ConstrainLoc (4, 4, 2);
-            }
 
             if (exitEast) {
                 // pick a loc with x=7, open East
@@ -169,14 +157,15 @@ namespace BDG
             if (exitNorth) {
                 // pick a loc with y=0, open North
 
+                Debug.Log ("Opening exit to North");
+
                 var x = r.Next (8);
                 s.SetWall (x, 0, MovementDirection.NORTH, IsWall.NO);
 
-                if (_nsSymmetry) {
-                    // and then with y=7, open South
-                    s.SetWall (x, 7, MovementDirection.SOUTH, IsWall.NO);
-                }
-            } else if (exitSouth) {
+            } 
+
+            if (exitSouth) {
+                Debug.Log ("Opening new exit to South");
                 // pick a loc with y=7, open South
                 var x = r.Next (8);
                 s.SetWall (x, 7, MovementDirection.SOUTH, IsWall.NO);

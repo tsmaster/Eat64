@@ -50,5 +50,10 @@ namespace BDG
                 g.SetFrightened();
             }
         }
+
+        internal void Clear ()
+        {
+            _ghosts.Clear ();
+        }
     }
 }
