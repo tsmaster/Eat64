@@ -17,8 +17,7 @@ namespace BDG
         }
 
         public void AddGhost (Ghost.GhostName name, int px, int py, Ghost.GhostState gs, int homeTileX, int homeTileY) {
-            var g = new Ghost (_spritesheet, name, px, py);
-            g.SetState (gs);
+            var g = new Ghost (_spritesheet, name, px, py, gs);
             g.SetHomeTile (homeTileX, homeTileY);
             _ghosts.Add (g);
         }
@@ -47,13 +46,20 @@ namespace BDG
         internal void FrightenGhosts ()
         {
             foreach (var g in _ghosts) {
-                g.SetFrightened();
+                g.SetGhostState (Ghost.GhostState.FRIGHTENED);
             }
         }
 
         internal void Clear ()
         {
             _ghosts.Clear ();
+        }
+
+        internal void SendGhostsHome ()
+        {
+            foreach (var g in _ghosts) {
+                g.ReturnToStart ();
+            }
         }
     }
 }

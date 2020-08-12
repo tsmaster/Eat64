@@ -37,7 +37,7 @@ namespace BDG
             //Debug.LogFormat ("getting tile at {0} {1}", tx, ty);
             if ((tx < 0) || (tx >= 8) ||
                 (ty < 0) || (ty >= 8)) {
-                Debug.LogFormat ("out of range: {0} {1}", tx, ty);
+                //Debug.LogFormat ("out of range: {0} {1}", tx, ty);
                 return null;
             }
             var t = _tiles [ty, tx];
@@ -95,12 +95,24 @@ namespace BDG
             while (openTiles.Count > 0) {
                 var t = openTiles [0];
                 openTiles.RemoveAt (0);
+
+                if ((t.TileX < 0) || (t.TileX >= 8) ||
+                    (t.TileY < 0) || (t.TileY >= 8)) {
+                    continue;
+                }
+
                 foreach (var md in moveDirs) {
                     if (t.CanGhostMoveInDirection (md)) {
                         var nextTile = t.NeighborInDirection (md);
                         if (nextTile == null) {
                             continue;
                         }
+
+                        if ((nextTile.TileX < 0) || (nextTile.TileX >= 8) ||
+                            (nextTile.TileY < 0) || (nextTile.TileY >= 8)) {
+                            continue;
+                        }
+
                         if (nextTile.DistToHome == -1) {
                             nextTile.DistToHome = t.DistToHome + 1;
                             openTiles.Add (nextTile);

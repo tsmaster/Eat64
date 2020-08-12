@@ -17,6 +17,15 @@ namespace BDG
         [SerializeField]
         Texture2D ghostSpriteSheet;
 
+        [SerializeField]
+        Texture2D titleTexture;
+
+        [SerializeField]
+        Texture2D livesTexture;
+
+        [SerializeField]
+        Texture2D numbersTexture;
+
         Texture2D _displayTexture;
 
         private int [,] maze = {
@@ -47,7 +56,14 @@ namespace BDG
         int bigMapX = 0;
         int bigMapY = 4;
         private float _bigMazeElapsed;
+
+        private float _titleElapsed;
+        private float _titleDuration = 3.0f;
         private const float _bigMazeLength = 2.5f;
+        private const int _maxPacManLives = 9;
+        private int _curPacManLives = 3;
+        private float _readyElapsed;
+        private const float _readyDuration = 2.0f;
 
         // Start is called before the first frame update
         void Start ()
@@ -67,12 +83,20 @@ namespace BDG
             MapManager.MapMgrSingleton = new MapManager ();
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
             GhostManager.GhostMgrSingleton = new GhostManager (ghostSpriteSheet);
-            GameStateMgr.GameStateMgrSingleton = new GameStateMgr {
-                CurrentGameState = GameStateMgr.GameState.SMALL_MAZE
-            };
-            BigMapManager.BigMapMgrSingleton = new BigMapManager ();
+            GameStateMgr.GameStateMgrSingleton = new GameStateMgr ();
+            SetGameState (GameStateMgr.GameState.TITLE_CARD);
 
+            BigMapManager.BigMapMgrSingleton = new BigMapManager ();
+        }
+
+        void StartGame (int x, int y)
+        {
+            bigMapX = x;
+            bigMapY = y;
             InitializeLevel (bigMapX, bigMapY);
+            _curPacManLives = 3;
+            ResetPacMan ();
+            SetGameState (GameStateMgr.GameState.READY);
         }
 
         void InitializeLevel (int bmx, int bmy) {
@@ -113,6 +137,13 @@ namespace BDG
             GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 24, 32, Ghost.GhostState.CAGED, -1, -1);
             GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 28, 32, Ghost.GhostState.CAGED, -1, 9);
             GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 32, Ghost.GhostState.CAGED, 9, 9);
+        }
+
+        void ResetPacMan ()
+        {
+            pacMan.IsAlive = true;
+            pacMan.SetPos (28, 8);
+            pacMan.MoveDir = MovementDirection.NONE;
         }
 
         void Initialize24Level ()
@@ -163,8 +194,10 @@ namespace BDG
             case GameStateMgr.GameState.LOREZJAM_CARD:
                 break;
             case GameStateMgr.GameState.TITLE_CARD:
+                UpdateTitle (dt);
                 break;
             case GameStateMgr.GameState.MAIN_MENU:
+                UpdateMainMenu (dt);
                 break;
             case GameStateMgr.GameState.ABOUT:
                 break;
@@ -173,10 +206,13 @@ namespace BDG
             case GameStateMgr.GameState.RULES:
                 break;
             case GameStateMgr.GameState.SMALL_MAZE:
-                SmallMazeUpdate (dt);
+                UpdateSmallMaze (dt);
                 break;
             case GameStateMgr.GameState.BIG_MAZE:
-                BigMazeUpdate (dt);
+                UpdateBigMaze (dt);
+                break;
+            case GameStateMgr.GameState.READY:
+                UpdateReady (dt);
                 break;
             default:
                 break;
@@ -219,35 +255,43 @@ namespace BDG
             }
         }
 
-        void SetBigMapMode ()
-        {
-            GameStateMgr.GameStateMgrSingleton.CurrentGameState = GameStateMgr.GameState.BIG_MAZE;
-            _bigMazeElapsed = 0.0f;
-        }
-
         #region SMALL MAZE
 
-        void SmallMazeUpdate (float dt)
+        void UpdateSmallMaze (float dt)
         {
-            if (LeftMap ()) {
-                var moveDir = MoveBigMap ();
-                Debug.LogFormat ("Big Map: moved in dir {0} to {1} {2}", moveDir, bigMapX, bigMapY);
-                SetBigMapMode ();
-                return;
+            if (pacMan.IsAlive) {
+                if (LeftMap ()) {
+                    var moveDir = MoveBigMap ();
+                    Debug.LogFormat ("Big Map: moved in dir {0} to {1} {2}", moveDir, bigMapX, bigMapY);
+                    SetGameState (GameStateMgr.GameState.BIG_MAZE);
+                    return;
+                }
+
+                if (Input.GetKeyDown (KeyCode.LeftArrow)) {
+                    pacMan.QueueMovementDirection (MovementDirection.WEST);
+                } else if (Input.GetKeyDown (KeyCode.RightArrow)) {
+                    pacMan.QueueMovementDirection (MovementDirection.EAST);
+                } else if (Input.GetKeyDown (KeyCode.UpArrow)) {
+                    pacMan.QueueMovementDirection (MovementDirection.NORTH);
+                } else if (Input.GetKeyDown (KeyCode.DownArrow)) {
+                    pacMan.QueueMovementDirection (MovementDirection.SOUTH);
+                }
+
+                pacMan.Update (dt);
+                GhostManager.GhostMgrSingleton.Update (dt);
+            } else {
+                _curPacManLives--;
+                if (_curPacManLives <= 0) {
+                    // TODO probably GAME OVER
+                    SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                } else {
+                    GhostManager.GhostMgrSingleton.SendGhostsHome ();
+                    ResetPacMan ();
+                    SetGameState (GameStateMgr.GameState.READY);
+                }
             }
 
-            if (Input.GetKeyDown (KeyCode.LeftArrow)) {
-                pacMan.QueueMovementDirection (MovementDirection.WEST);
-            } else if (Input.GetKeyDown (KeyCode.RightArrow)) {
-                pacMan.QueueMovementDirection (MovementDirection.EAST);
-            } else if (Input.GetKeyDown (KeyCode.UpArrow)) {
-                pacMan.QueueMovementDirection (MovementDirection.NORTH);
-            } else if (Input.GetKeyDown (KeyCode.DownArrow)) {
-                pacMan.QueueMovementDirection (MovementDirection.SOUTH);
-            }
 
-            pacMan.Update (dt);
-            GhostManager.GhostMgrSingleton.Update (dt);
             DotManager.DotMgrSingleton.EatAt (pacMan.XPos, pacMan.YPos);
 
             // draw
@@ -272,7 +316,7 @@ namespace BDG
         #endregion // SMALL MAZE
 
         #region BIG MAZE
-        void BigMazeUpdate (float dt)
+        void UpdateBigMaze (float dt)
         {
             _bigMazeElapsed += dt;
 
@@ -281,7 +325,7 @@ namespace BDG
 
             if (_bigMazeElapsed >= _bigMazeLength) {
                 InitializeLevel (bigMapX, bigMapY);
-                GameStateMgr.GameStateMgrSingleton.CurrentGameState = GameStateMgr.GameState.SMALL_MAZE;
+                SetGameState (GameStateMgr.GameState.READY);
             }
         }
 
@@ -345,6 +389,96 @@ namespace BDG
             }
         }
         #endregion // BIG MAZE
+
+
+        #region TITLE
+        void UpdateTitle (float dt)
+        {
+            _titleElapsed += dt;
+            if (_titleElapsed >= _titleDuration) {
+                SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                return;
+            }
+            DrawTitle ();
+        }
+        void DrawTitle ()
+        {
+            DrawUtil.DrawSpriteOpaque (titleTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+            _displayTexture.Apply ();
+        }
+        #endregion // TITLE
+
+        #region MAIN_MENU
+        void UpdateMainMenu (float dt)
+        {
+            // TODO add selection here
+
+            DrawMainMenu ();
+
+            // TODO remove this
+            StartGame (2, 4);
+        }
+
+        void DrawMainMenu ()
+        {
+        }
+        #endregion // MAIN_MENU
+
+        #region READY
+        void UpdateReady (float dt)
+        {
+            _readyElapsed += dt;
+
+            if (_readyElapsed >= _readyDuration) {
+                SetGameState (GameStateMgr.GameState.SMALL_MAZE);
+            }
+            DrawReady ();
+        }
+
+        void DrawReady ()
+        {
+            DrawSmallMaze ();
+
+            // draw number of lives remaining
+            DrawUtil.DrawSpriteAlpha (numbersTexture, _displayTexture, 7*_curPacManLives, 0, 7, 7, 20, 30);
+            DrawUtil.DrawSpriteAlpha (livesTexture, _displayTexture, 0, 0, 31, 7, 30, 30);
+            _displayTexture.Apply ();
+        }
+        #endregion // READY
+
+        private void SetGameState (GameStateMgr.GameState state)
+        {
+            var oldState = GameStateMgr.GameStateMgrSingleton.CurrentGameState;
+            GameStateMgr.GameStateMgrSingleton.CurrentGameState = state;
+
+            switch (state) {
+            case GameStateMgr.GameState.TITLE_CARD:
+                _titleElapsed = 0.0f;
+                break;
+            case GameStateMgr.GameState.BDG_LOGO:
+                break;
+            case GameStateMgr.GameState.LOREZJAM_CARD:
+                break;
+            case GameStateMgr.GameState.MAIN_MENU:
+                //_mainMenu.Reset ();
+                break;
+            case GameStateMgr.GameState.ABOUT:
+                break;
+            case GameStateMgr.GameState.DEDICATION:
+                break;
+            case GameStateMgr.GameState.RULES:
+                break;
+            case GameStateMgr.GameState.READY:
+                _readyElapsed = 0.0f;
+                break;
+            case GameStateMgr.GameState.SMALL_MAZE:
+                break;
+            case GameStateMgr.GameState.BIG_MAZE:
+                _bigMazeElapsed = 0.0f;
+                break;
+            }
+        }
+
 
         void DrawSpriteOpaque (int spriteX, int spriteY, int spriteWidth, int spriteHeight,
             int destX, int destY)

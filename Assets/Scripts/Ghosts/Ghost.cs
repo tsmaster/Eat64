@@ -37,13 +37,15 @@ namespace BDG
 
         int _homeXPixel;
         int _homeYPixel;
+        private int _startPosX;
+        private int _startPosY;
+        private GhostState _startState;
 
         public GhostState State { get; private set; }
 
-        public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos) : base(spritesheet, 8,  8, xPos, yPos)
+        public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos, GhostState startState) : base(spritesheet, 8,  8, xPos, yPos)
         {
             _name = name;
-            State = GhostState.SCATTER;
             _scatterLength = 10.0f;
             _scatterElapsed = 0.0f;
             _chaseLength = 8.0f;
@@ -60,16 +62,41 @@ namespace BDG
             _homeXPixel = -1;
             _homeYPixel = -1;
 
+            _startPosX = xPos;
+            _startPosY = yPos;
+            _startState = startState;
+            State = startState;
+
             Speed = 10.0f;
         }
 
-        internal void SetFrightened ()
+        internal void ReturnToStart ()
         {
-            if ((State == GhostState.CHASE) ||
-                (State == GhostState.SCATTER) ||
-                (State == GhostState.FRIGHTENED)) {
-                State = GhostState.FRIGHTENED;
+            XPos = _startPosX;
+            YPos = _startPosY;
+            MoveDir = MovementDirection.NONE;
+            SetGhostState (_startState);
+        }
+
+        public void SetGhostState (GhostState gs)
+        {
+            State = gs;
+
+            switch (gs) {
+            case GhostState.SCATTER:
+                _scatterElapsed = 0.0f;
+                break;
+            case GhostState.CHASE:
+                _chaseElapsed = 0.0f;
+                break;
+            case GhostState.FRIGHTENED:
                 _frightenedElapsed = 0.0f;
+                break;
+            case GhostState.RETURN:
+                break;
+            case GhostState.CAGED:
+                _cagedElapsed = 0.0f;
+                break;
             }
         }
 
@@ -182,9 +209,7 @@ namespace BDG
             if (_cagedElapsed >= _cagedLength) {
                 Debug.LogFormat ("cage dur elapsed");
                 MoveDir = MovementDirection.NORTH;
-                State = GhostState.SCATTER;
-                _scatterElapsed = 0.0f;
-                _cagedElapsed = 0.0f;
+                SetGhostState(GhostState.SCATTER);
             } else {
                 MoveDir = curTile.InCageDir;
                 Debug.LogFormat ("moving in dir {0}", MoveDir);
@@ -196,8 +221,7 @@ namespace BDG
         {
             var curTile = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
             if (curTile.IsCage) {
-                State = GhostState.CAGED;
-                _cagedElapsed = 0.0f;
+                SetGhostState(GhostState.CAGED);
                 return;
             }
 
@@ -228,18 +252,13 @@ namespace BDG
             MoveToTarget (_homeXPixel, _homeYPixel);
         }
 
-        public void SetState (GhostState gs)
-        {
-            State = gs;
-        }
-
         public override void Update (float dt)
         {
             var pm = PacMan.PacManSingleton;
 
             if (pm.IsAlive && CollidedWithPacMan ()) {
                 if (State == GhostState.FRIGHTENED) {
-                    State = GhostState.RETURN;
+                    SetGhostState(GhostState.RETURN);
                 } else if (State != GhostState.RETURN) {
                     pm.Kill ();
                 }
@@ -267,10 +286,7 @@ namespace BDG
                 if (_chaseElapsed >= _chaseLength) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
-                    State = GhostState.SCATTER;
-                    _chaseElapsed = 0.0f;
-                    _scatterElapsed = 0.0f;
-                    _frightenedElapsed = 0.0f;
+                    SetGhostState(GhostState.SCATTER);
                 }
                 break;
             case GhostState.SCATTER:
@@ -278,19 +294,13 @@ namespace BDG
                 if (_scatterElapsed >= _scatterLength) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
-                    State = GhostState.CHASE;
-                    _chaseElapsed = 0.0f;
-                    _scatterElapsed = 0.0f;
-                    _frightenedElapsed = 0.0f;
+                    SetGhostState(GhostState.CHASE);
                 }
                 break;
             case GhostState.FRIGHTENED:
                 _frightenedElapsed += dt;
                 if (_frightenedElapsed >= _frightenedLength) {
-                    State = GhostState.CHASE;
-                    _chaseElapsed = 0.0f;
-                    _scatterElapsed = 0.0f;
-                    _frightenedElapsed = 0.0f;
+                    SetGhostState(GhostState.CHASE);
                 }
                 break;
             case GhostState.CAGED:

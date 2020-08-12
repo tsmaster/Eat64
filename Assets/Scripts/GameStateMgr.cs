@@ -12,6 +12,7 @@ namespace BDG
             ABOUT,
             DEDICATION,
             RULES,
+            READY,
             SMALL_MAZE,
             BIG_MAZE
         }
