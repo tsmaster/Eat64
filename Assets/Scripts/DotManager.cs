@@ -65,6 +65,9 @@ namespace BDG
 
                     if (dr.isEnergizer) {
                         GhostManager.GhostMgrSingleton.FrightenGhosts ();
+                        SoundMgr.Singleton.Play (SoundMgr.Sound.EatEnergizer);
+                    } else {
+                        SoundMgr.Singleton.Play (SoundMgr.Sound.EatDot);
                     }
                     return;
                 }
@@ -74,6 +77,11 @@ namespace BDG
         internal void Clear ()
         {
             _dots.Clear ();
+        }
+
+        internal bool IsCleared ()
+        {
+            return _dots.Count == 0;
         }
     }
 }

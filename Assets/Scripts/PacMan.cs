@@ -83,8 +83,8 @@ namespace BDG
 
         override protected void ReachedStop ()
         {
-            Debug.LogFormat ("reached stop");
-            Debug.LogFormat ("pos {0} {1}", XPos, YPos);
+            //Debug.LogFormat ("reached stop");
+            //Debug.LogFormat ("pos {0} {1}", XPos, YPos);
 
             var tx = Mathf.FloorToInt (XPos / 8.0f);
             var ty = 7 - Mathf.FloorToInt (YPos / 8.0f);
@@ -95,20 +95,20 @@ namespace BDG
 
             if (tile == null) {
                 // entered tunnel
-                Debug.LogFormat ("Pac man entered tunnel");
+                //Debug.LogFormat ("Pac man entered tunnel");
                 MoveDir = MovementDirection.NONE;
                 return;
             }
 
-            Debug.LogFormat ("tile: {0}", tile.Name);
+            //Debug.LogFormat ("tile: {0}", tile.Name);
 
-            Debug.LogFormat ("existing movedir: {0}", MoveDir);
+            //Debug.LogFormat ("existing movedir: {0}", MoveDir);
 
             if (tile.CanCharMoveInDirection (this, _queuedMovementDirection)) {
-                Debug.LogFormat ("can move in queued dir: {0}", _queuedMovementDirection);
+                //Debug.LogFormat ("can move in queued dir: {0}", _queuedMovementDirection);
                 MoveDir = _queuedMovementDirection;
             } else if (!tile.CanCharMoveInDirection (this, MoveDir)) {
-                Debug.LogFormat ("can move in current movedir: {0}", MoveDir);
+                //Debug.LogFormat ("can move in current movedir: {0}", MoveDir);
                 MoveDir = MovementDirection.NONE;
             }
             SetStops (MoveDir, XPos, YPos);

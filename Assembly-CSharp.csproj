@@ -72,6 +72,7 @@
      <Compile Include="Assets\Scripts\Ghosts\GhostManager.cs" />
      <Compile Include="Assets\Scripts\MapManager.cs" />
      <Compile Include="Assets\Scripts\PacMan.cs" />
+     <Compile Include="Assets\Scripts\SoundMgr.cs" />
      <Compile Include="Assets\Scripts\Tile.cs" />
  <Reference Include="Unity.Timeline.Editor">
  <HintPath>/mnt/dsk2020/ssd/tsmaster/Dropbox/Dev/LowResJam2020/Eat64/Eat64/Library/ScriptAssemblies/Unity.Timeline.Editor.dll</HintPath>

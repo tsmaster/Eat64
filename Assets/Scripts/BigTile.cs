@@ -99,7 +99,7 @@ namespace BDG
             var adj = MakeAdj (r);
             var noun = MakeNoun (r);
 
-            Debug.LogFormat ("Made BigTile {0} {1} {2} {3}", Name, _fourcc, adj, noun);
+            //Debug.LogFormat ("Made BigTile {0} {1} {2} {3}", Name, _fourcc, adj, noun);
 
             DoPrim (r);
         }
@@ -133,7 +133,7 @@ namespace BDG
 
             while (availableLocations.Count > 0) {
                 if (dbgBailout <= 0) {
-                    Debug.LogError ("Bailing out");
+                    //Debug.LogError ("Bailing out");
                     return;
                 }
                 dbgBailout--;
@@ -239,7 +239,7 @@ namespace BDG
 
             var tCell = GetCellAt (tx, ty);
             if (tCell == null) {
-                Debug.LogErrorFormat ("CanMove {0} {1} {2} found no cell", mx, my, direction);
+                //Debug.LogErrorFormat ("CanMove {0} {1} {2} found no cell", mx, my, direction);
             }
             return tCell.CanMove (direction);
         }
@@ -254,7 +254,7 @@ namespace BDG
         {
             if ((tx < 0) || (tx >= TILE_WIDTH) ||
                 (ty < 0) || (ty >= TILE_WIDTH)) {
-                Debug.LogErrorFormat ("GetCellAt {0} {1}", tx, ty);
+                //Debug.LogErrorFormat ("GetCellAt {0} {1}", tx, ty);
                 return null;
             }
             return _bigTileCells [ty, tx];

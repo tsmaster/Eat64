@@ -26,6 +26,21 @@ namespace BDG
         [SerializeField]
         Texture2D numbersTexture;
 
+        [SerializeField]
+        AudioClip eatDotSound;
+
+        [SerializeField]
+        AudioClip eatEnergizerSound;
+
+        [SerializeField]
+        AudioClip eatGhostSound;
+
+        [SerializeField]
+        AudioClip eatPacManSound;
+
+        [SerializeField]
+        AudioClip clearLevelSound;
+
         Texture2D _displayTexture;
 
         private int [,] maze = {
@@ -65,6 +80,8 @@ namespace BDG
         private float _readyElapsed;
         private const float _readyDuration = 2.0f;
 
+        private bool _hasCompletedLevel = false;
+
         // Start is called before the first frame update
         void Start ()
         {
@@ -80,6 +97,16 @@ namespace BDG
                 28, 8);
             PacMan.PacManSingleton = pacMan;
 
+            SoundMgr.Singleton = new SoundMgr ();
+            AudioSource audioSource = GetComponent<AudioSource> ();
+            SoundMgr.Singleton.SetAudioSource (audioSource);
+            SoundMgr.Singleton.AddEffect (SoundMgr.Sound.EatDot, eatDotSound);
+            SoundMgr.Singleton.AddEffect (SoundMgr.Sound.EatEnergizer, eatEnergizerSound);
+            SoundMgr.Singleton.AddEffect (SoundMgr.Sound.EatGhost, eatGhostSound);
+            SoundMgr.Singleton.AddEffect (SoundMgr.Sound.EatPacMan, eatPacManSound);
+            SoundMgr.Singleton.AddEffect (SoundMgr.Sound.ClearLevel, clearLevelSound);
+
+            SoundMgr.Singleton.IsOn = true;
             MapManager.MapMgrSingleton = new MapManager ();
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
             GhostManager.GhostMgrSingleton = new GhostManager (ghostSpriteSheet);
@@ -97,6 +124,7 @@ namespace BDG
             _curPacManLives = 3;
             ResetPacMan ();
             SetGameState (GameStateMgr.GameState.READY);
+            BigMapManager.BigMapMgrSingleton.ResetClearedList ();
         }
 
         void InitializeLevel (int bmx, int bmy) {
@@ -112,8 +140,13 @@ namespace BDG
                 InitializeConstrainedLevel (bmx, bmy);
             }
 
-            AddDots ();
-            AddGhosts ();
+            if (!BigMapManager.BigMapMgrSingleton.GetHasCleared (bmx, bmy)) {
+                AddDots ();
+                AddGhosts ();
+                _hasCompletedLevel = false;
+            } else {
+                _hasCompletedLevel = true;
+            }
         }
 
         void AddDots ()
@@ -233,20 +266,26 @@ namespace BDG
 
         MovementDirection MoveBigMap ()
         {
+            Debug.LogFormat ("moving map based on pac man pos {0} {1}", pacMan.XPos, pacMan.YPos);
+            Debug.LogFormat ("old bmpos {0} {1}", bigMapX, bigMapY);
             if (pacMan.XPos >= 64) {
                 // move east
+                Debug.LogFormat ("moving east");
                 bigMapX += 1;
                 return MovementDirection.EAST;
             } else if (pacMan.YPos >= 64) {
                 // move north
+                Debug.LogFormat ("moving north");
                 bigMapY -= 1;
                 return MovementDirection.NORTH;
-            } else if (pacMan.XPos <= 0) {
+            } else if (pacMan.XPos < 0) {
                 // move west
+                Debug.LogFormat ("moving west");
                 bigMapX -= 1;
                 return MovementDirection.WEST;
-            } else if (pacMan.YPos <= 0) {
+            } else if (pacMan.YPos < 0) {
                 // move south
+                Debug.LogFormat ("moving south");
                 bigMapY += 1;
                 return MovementDirection.SOUTH;
             } else {
@@ -267,6 +306,14 @@ namespace BDG
                     return;
                 }
 
+                if ((!_hasCompletedLevel) &&
+                    (DotManager.DotMgrSingleton.IsCleared ())) {
+                    _hasCompletedLevel = true;
+                    ExtraLife ();
+                    BigMapManager.BigMapMgrSingleton.SetHasCleared (bigMapX, bigMapY);
+                    SoundMgr.Singleton.Play (SoundMgr.Sound.ClearLevel);
+                }
+
                 if (Input.GetKeyDown (KeyCode.LeftArrow)) {
                     pacMan.QueueMovementDirection (MovementDirection.WEST);
                 } else if (Input.GetKeyDown (KeyCode.RightArrow)) {
@@ -276,6 +323,15 @@ namespace BDG
                 } else if (Input.GetKeyDown (KeyCode.DownArrow)) {
                     pacMan.QueueMovementDirection (MovementDirection.SOUTH);
                 }
+
+                if (Input.GetKeyDown (KeyCode.X)) {
+                    DotManager.DotMgrSingleton.Clear ();
+                }
+
+                if (Input.GetKeyDown (KeyCode.S)) {
+                    SoundMgr.Singleton.ToggleOn ();
+                }
+
 
                 pacMan.Update (dt);
                 GhostManager.GhostMgrSingleton.Update (dt);
@@ -306,6 +362,11 @@ namespace BDG
             GhostManager.GhostMgrSingleton.Draw (_displayTexture);
 
             _displayTexture.Apply ();
+        }
+
+        private void ExtraLife ()
+        {
+            _curPacManLives = Math.Min (9, _curPacManLives + 1);
         }
 
         void DrawSmallMaze ()
@@ -345,6 +406,11 @@ namespace BDG
                     var py = 32 - 2 * dy;
 
                     DrawUtil.SetPixel (_displayTexture, px, py, openColor);
+
+                    if (BigMapManager.BigMapMgrSingleton.GetHasCleared (mx, my)) {
+                        DrawUtil.SetPixel (_displayTexture, px, py, new Color (0, 1, 0));
+                    }
+
                     if ((dx == 0) && (dy == 0)) {
                         DrawUtil.SetPixel (_displayTexture, px, py, new Color(1, 1, 0));
                     }

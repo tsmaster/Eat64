@@ -162,7 +162,7 @@ namespace BDG
 
         protected override void ReachedStop ()
         {
-            Debug.LogFormat ("Ghost {0} reached stop in state {1}", _name, State);
+            //Debug.LogFormat ("Ghost {0} reached stop in state {1}", _name, State);
 
             switch (State) {
             case GhostState.SCATTER:
@@ -202,17 +202,17 @@ namespace BDG
         {
             var curTile = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
 
-            Debug.LogFormat ("in cage tile {0}", curTile.Name);
+            //Debug.LogFormat ("in cage tile {0}", curTile.Name);
 
-            Debug.LogFormat ("check cage time {0} vs limit {1}", _cagedElapsed, _cagedLength);
+            //Debug.LogFormat ("check cage time {0} vs limit {1}", _cagedElapsed, _cagedLength);
 
-            if (_cagedElapsed >= _cagedLength) {
-                Debug.LogFormat ("cage dur elapsed");
+            if ((_cagedElapsed >= _cagedLength) && (!DotManager.DotMgrSingleton.IsCleared())) {
+                //Debug.LogFormat ("cage dur elapsed");
                 MoveDir = MovementDirection.NORTH;
                 SetGhostState(GhostState.SCATTER);
             } else {
                 MoveDir = curTile.InCageDir;
-                Debug.LogFormat ("moving in dir {0}", MoveDir);
+                //Debug.LogFormat ("moving in dir {0}", MoveDir);
             }
             SetStops (MoveDir, XPos, YPos);
         }
@@ -233,7 +233,7 @@ namespace BDG
             foreach (var md in moveDirs) {
                 var nt = curTile.NeighborInDirection (md);
                 if (nt == null) {
-                    Debug.LogFormat ("got null neighbor of {0} in direction {1}", curTile.Name, md);
+                    //Debug.LogFormat ("got null neighbor of {0} in direction {1}", curTile.Name, md);
                     continue;
                 }
                 var ntdth = nt.DistToHome;
@@ -259,13 +259,19 @@ namespace BDG
             if (pm.IsAlive && CollidedWithPacMan ()) {
                 if (State == GhostState.FRIGHTENED) {
                     SetGhostState(GhostState.RETURN);
+                    SoundMgr.Singleton.Play (SoundMgr.Sound.EatGhost);
                 } else if (State != GhostState.RETURN) {
                     pm.Kill ();
+                    SoundMgr.Singleton.Play (SoundMgr.Sound.EatPacMan);
                 }
             }
 
+            if ((State != GhostState.CAGED) && (DotManager.DotMgrSingleton.IsCleared ())) {
+                SetGhostState (GhostState.RETURN);
+            }
+
             if (MoveDir == MovementDirection.NONE) {
-                Debug.LogFormat ("Ghost {0} updating when stopped", _name);
+                //Debug.LogFormat ("Ghost {0} updating when stopped", _name);
                 var mm = MapManager.MapMgrSingleton;
 
                 var tile = mm.GetTileForPixel (XPos, YPos);
@@ -277,7 +283,7 @@ namespace BDG
 
                 MoveDir = dirs [0];
                 SetStops (MoveDir, XPos, YPos);
-                Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
+                //Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
             }
 
             switch (State) {
@@ -329,24 +335,22 @@ namespace BDG
             var tile = mm.GetTileForPixel (XPos, YPos);
 
             if (tile == null) {
-                Debug.LogFormat ("no tile for pos {0} {1}", XPos, YPos);
+                //Debug.LogFormat ("no tile for pos {0} {1}", XPos, YPos);
                 MoveDir = MovementDirection.NONE;
                 return;
             }
 
-            Debug.LogFormat ("at tile {0} {1} {2}", XPos, YPos, tile.Name);
+            //Debug.LogFormat ("at tile {0} {1} {2}", XPos, YPos, tile.Name);
 
             List<MovementDirection> dirs = tile.GetLegalDirectionsForChar (this);
-            dirs.Remove (Character.OppositeMoveDirection (MoveDir));
-
-            foreach (var d in dirs) {
-                Debug.LogFormat ("legal dir: {0}", d);
+            if (dirs.Count > 1) {
+                dirs.Remove (Character.OppositeMoveDirection (MoveDir));
             }
 
             var mi = UnityEngine.Random.Range (0, dirs.Count);
             MoveDir = dirs [mi];
             SetStops (MoveDir, XPos, YPos);
-            Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
+            //Debug.LogFormat ("Ghost {0} new dir: {1}", _name, MoveDir);
         }
 
         private void BlinkyBrain ()
@@ -425,17 +429,17 @@ namespace BDG
 
             var distSqr = dx * dx + dy * dy;
 
-            Debug.LogFormat ("distSqr for Clyde: {0}", distSqr);
+            //Debug.LogFormat ("distSqr for Clyde: {0}", distSqr);
 
             float tx, ty;
             if (distSqr > threshSqr) {
                 tx = pacX;
                 ty = pacY;
-                Debug.LogFormat ("steering to pac");
+                //Debug.LogFormat ("steering to pac");
             } else {
                 tx = _homeXPixel;
                 ty = _homeYPixel;
-                Debug.LogFormat ("steering home");
+                //Debug.LogFormat ("steering home");
             }
 
             MoveToTarget (tx, ty);
@@ -476,7 +480,7 @@ namespace BDG
 
             MoveDir = bestDir;
             SetStops (MoveDir, XPos, YPos);
-            Debug.LogFormat ("{0} Moving {1}", _name, MoveDir);
+            //Debug.LogFormat ("{0} Moving {1}", _name, MoveDir);
         }
     }
 }

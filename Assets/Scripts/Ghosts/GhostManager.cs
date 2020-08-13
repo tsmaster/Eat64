@@ -46,7 +46,11 @@ namespace BDG
         internal void FrightenGhosts ()
         {
             foreach (var g in _ghosts) {
-                g.SetGhostState (Ghost.GhostState.FRIGHTENED);
+                if ((g.State == Ghost.GhostState.SCATTER) ||
+                    (g.State == Ghost.GhostState.CHASE) ||
+                    (g.State == Ghost.GhostState.FRIGHTENED)) {
+                    g.SetGhostState (Ghost.GhostState.FRIGHTENED);
+                }
             }
         }
 

@@ -11,14 +11,54 @@ namespace BDG
 
         List<BigTile> _bigTiles;
         List<ChunkBreaker> _chunkBreakers;
+        List<KeyValuePair<int, int>> _hasCleared;
 
         public BigMapManager ()
         {
             _bigTiles = new List<BigTile> ();
             _chunkBreakers = new List<ChunkBreaker> ();
+            _hasCleared = new List<KeyValuePair<int, int>> ();
         }
 
         static public BigMapManager BigMapMgrSingleton { get; set; }
+
+        public bool GetHasCleared (int x, int y)
+        {
+            foreach (var loc in _hasCleared) {
+                if ((loc.Key == x) && (loc.Value == y)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public void SetHasCleared (int x, int y)
+        {
+            var kv = new KeyValuePair<int, int> (x, y);
+            if (!_hasCleared.Contains (kv)) {
+                _hasCleared.Add (kv);
+            }
+
+            var rad = 5;
+            var radSqr = rad * rad;
+            var newList = new List<KeyValuePair<int, int>> ();
+            foreach (var rkv in _hasCleared) {
+                var kx = rkv.Key;
+                var ky = rkv.Value;
+                var dx = kx - x;
+                var dy = ky - y;
+                var dsqr = dx * dx + dy * dy;
+                if (dsqr <= radSqr) {
+                    newList.Add (rkv);
+                }
+            }
+            _hasCleared = newList;
+        }
+
+        public List<KeyValuePair<int, int>> GetHasClearedList ()
+        {
+            return _hasCleared;
+        }
 
         internal bool CanMove (int mx, int my, MovementDirection direction, out Color outColor)
         {
@@ -92,6 +132,11 @@ namespace BDG
             }
 
             return ncb;
+        }
+
+        internal void ResetClearedList ()
+        {
+            _hasCleared.Clear ();
         }
 
         private bool CrossesWall (int mx, int my, int nx, int ny)
