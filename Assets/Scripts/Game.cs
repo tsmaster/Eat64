@@ -43,6 +43,14 @@ namespace BDG
 
         Texture2D _displayTexture;
 
+        public enum Difficulty
+        {
+            Easy,
+            Normal,
+            Hard,
+            Extreme
+        }
+
         private int [,] maze = {
             { 3, 9, 9, 6, 6, 9, 9, 2 },
             { 7, 2, 3, 1, 0, 2, 3, 5 },
@@ -81,6 +89,7 @@ namespace BDG
         private const float _readyDuration = 2.0f;
 
         private bool _hasCompletedLevel = false;
+        private Difficulty _difficulty = Difficulty.Normal;
 
         // Start is called before the first frame update
         void Start ()
@@ -121,10 +130,28 @@ namespace BDG
             bigMapX = x;
             bigMapY = y;
             InitializeLevel (bigMapX, bigMapY);
-            _curPacManLives = 3;
+            StartPacManLives ();
             ResetPacMan ();
             SetGameState (GameStateMgr.GameState.READY);
             BigMapManager.BigMapMgrSingleton.ResetClearedList ();
+        }
+
+        private void StartPacManLives ()
+        {
+            switch (_difficulty) {
+            case Difficulty.Easy:
+                _curPacManLives = 5;
+                break;
+            case Difficulty.Normal:
+                _curPacManLives = 3;
+                break;
+            case Difficulty.Hard:
+                _curPacManLives = 2;
+                break;
+            case Difficulty.Extreme:
+                _curPacManLives = 1;
+                break;
+            }
         }
 
         void InitializeLevel (int bmx, int bmy) {
@@ -157,6 +184,34 @@ namespace BDG
                 DotManager.DotMgrSingleton.AddDot (x, 0, false);
                 DotManager.DotMgrSingleton.AddDot (x, 56, false);
             }
+
+            if (_difficulty != Difficulty.Easy) {
+                for (int x = 16; x <= 40; x += 8) {
+                    DotManager.DotMgrSingleton.AddDot (8, x, false);
+                    DotManager.DotMgrSingleton.AddDot (48, x, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 8, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 48, false);
+                }
+                DotManager.DotMgrSingleton.AddDot (8, 8, false);
+                DotManager.DotMgrSingleton.AddDot (48, 8, false);
+                DotManager.DotMgrSingleton.AddDot (8, 48, false);
+                DotManager.DotMgrSingleton.AddDot (48, 48, false);
+            }
+
+            if ((_difficulty == Difficulty.Hard) ||
+                (_difficulty == Difficulty.Extreme)) {
+                for (int x = 24; x <= 32; x += 8) {
+                    DotManager.DotMgrSingleton.AddDot (16, x, false);
+                    DotManager.DotMgrSingleton.AddDot (40, x, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 16, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 40, false);
+                }
+                DotManager.DotMgrSingleton.AddDot (16, 16, false);
+                DotManager.DotMgrSingleton.AddDot (40, 16, false);
+                DotManager.DotMgrSingleton.AddDot (16, 40, false);
+                DotManager.DotMgrSingleton.AddDot (40, 40, false);
+            }
+
 
             DotManager.DotMgrSingleton.AddDot (0, 0, true);
             DotManager.DotMgrSingleton.AddDot (0, 56, true);
