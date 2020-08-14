@@ -11,7 +11,15 @@ namespace BDG
             BLINKY,
             PINKY,
             INKY,
-            CLYDE
+            CLYDE,
+            JAMAAL,
+            LEFTY,
+            RIGHTY,
+            INTERCEPTOR,
+            QUADDY,
+            HILBERT,
+            CLOCKY,
+            LILBRO
         }
 
         public enum GhostState
@@ -35,6 +43,8 @@ namespace BDG
         float _blinkLength;
         int _numBlinks;
 
+        float _lifeElapsed;
+
         int _homeXPixel;
         int _homeYPixel;
         private int _startPosX;
@@ -42,11 +52,13 @@ namespace BDG
         private GhostState _startState;
 
         public GhostState State { get; private set; }
+        public static int DBG_x { get; private set; }
+        public static int DBG_y { get; private set; }
 
         public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos, GhostState startState) : base(spritesheet, 8,  8, xPos, yPos)
         {
             _name = name;
-            _scatterLength = 10.0f;
+            _scatterLength = 0.1f; // TODO reset to 10
             _scatterElapsed = 0.0f;
             _chaseLength = 8.0f;
             _chaseElapsed = 0.0f;
@@ -135,6 +147,22 @@ namespace BDG
                 return 16;
             case GhostName.CLYDE:
                 return 24;
+            case GhostName.JAMAAL:
+                return 32;
+            case GhostName.LEFTY:
+                return 40;
+            case GhostName.RIGHTY:
+                return 48;
+            case GhostName.INTERCEPTOR:
+                return 56;
+            case GhostName.QUADDY:
+                return 0;
+            case GhostName.HILBERT:
+                return 8;
+            case GhostName.CLOCKY:
+                return 16;
+            case GhostName.LILBRO:
+                return 24;
             default:
                 return 0;
             }
@@ -154,6 +182,10 @@ namespace BDG
             case GhostName.PINKY:
             case GhostName.INKY:
             case GhostName.CLYDE:
+            case GhostName.JAMAAL:
+            case GhostName.LEFTY:
+            case GhostName.RIGHTY:
+            case GhostName.INTERCEPTOR:
                 return 8;
             default:
                 return 0;
@@ -182,6 +214,32 @@ namespace BDG
                 case GhostName.CLYDE:
                     ClydeBrain ();
                     return;
+                case GhostName.JAMAAL:
+                    JamaalBrain ();
+                    return;
+                case GhostName.LEFTY:
+                    LeftyBrain ();
+                    return;
+                case GhostName.RIGHTY:
+                    RightyBrain ();
+                    return;
+                case GhostName.INTERCEPTOR:
+                    InterceptorBrain ();
+                    return;
+                case GhostName.CLOCKY:
+                    ClockyBrain ();
+                    return;
+                case GhostName.QUADDY:
+                    QuaddyBrain ();
+                    return;
+                case GhostName.HILBERT:
+                    HilbertBrain ();
+                    return;
+                case GhostName.LILBRO:
+                    LilBroBrain ();
+                    return;
+
+
                 default:
                     RandomBrain ();
                     return;
@@ -196,6 +254,228 @@ namespace BDG
                 CagedBrain ();
                 break;
             }
+        }
+
+        private void HilbertBrain ()
+        {
+            const float HILBERT_DURATION = 160.0f;
+            const int NUM_HILBERT_TARGETS = 64;
+
+            float frac = (_lifeElapsed % HILBERT_DURATION) / HILBERT_DURATION;
+
+            int index = Mathf.FloorToInt (frac * NUM_HILBERT_TARGETS);
+
+            bool found = FindTileIndices (index, Hilbert.TargetOrder, out int tx, out int ty);
+
+            if (!found) {
+                BlinkyBrain ();
+                return;
+            }
+
+            var targetX = 8 * tx;
+            var targetY = 56 - 8 * ty;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void QuaddyBrain ()
+        {
+            const float QUADDY_DURATION = 160.0f;
+            const int NUM_QUADDY_TARGETS = 64;
+
+            float frac = (_lifeElapsed % QUADDY_DURATION) / QUADDY_DURATION;
+
+            int index = Mathf.FloorToInt (frac * NUM_QUADDY_TARGETS);
+
+            bool found = FindTileIndices (index, QuadTree.TargetOrder, out int tx, out int ty);
+
+            if (!found) {
+                BlinkyBrain ();
+                return;
+            }
+
+            var targetX = 8 * tx;
+            var targetY = 56 - 8 * ty;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void ClockyBrain ()
+        {
+            const float CLOCK_DURATION = 100.0f;
+            const int NUM_CLOCK_TARGETS = 28;
+
+            float frac = (_lifeElapsed % CLOCK_DURATION) / CLOCK_DURATION;
+
+            int index = Mathf.FloorToInt (frac * NUM_CLOCK_TARGETS);
+
+            bool found = FindTileIndices (index, Clocky.TargetOrder, out int tx, out int ty);
+
+            if (!found) {
+                BlinkyBrain ();
+                return;
+            }
+
+            var targetX = 8 * tx;
+            var targetY = 56 - 8 * ty;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private bool FindTileIndices (int index, int [,] targetOrder, out int tx, out int ty)
+        {
+            for (int x = 0; x < 8; ++x) {
+                for (int y = 0; y < 8; ++y) {
+                    if (targetOrder [y, x] == index) {
+                        tx = x;
+                        ty = y;
+                        return true;
+                    }
+                }
+            }
+            tx = -1;
+            ty = -1;
+            return false;
+        }
+
+        private void LilBroBrain ()
+        {
+            // find closest other ghost to Pac Man
+
+            Ghost closest = null;
+            float distToPac = 0.0f;
+
+            var px = PacMan.PacManSingleton.XPos;
+            var py = PacMan.PacManSingleton.YPos;
+
+            foreach (var g in GhostManager.GhostMgrSingleton.GetGhostList ()) {
+                if (g._name == _name) {
+                    continue;
+                }
+
+                if (!((g.State == GhostState.CHASE) ||
+                    (g.State == GhostState.SCATTER))) {
+                    continue;
+                }
+
+                var dx = g.XPos - px;
+                var dy = g.YPos - py;
+
+                var distSqr = dx * dx + dy * dy;
+
+                if ((closest == null) || (distSqr < distToPac)) {
+                    closest = g;
+                    distToPac = distSqr;
+                }
+            }
+
+            if (closest == null) {
+                BlinkyBrain();
+                return;
+            }
+
+            var gx = closest.XPos;
+            var gy = closest.YPos;
+
+            var targetX = (gx + px) / 2;
+            var targetY = (gy + py) / 2;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void InterceptorBrain ()
+        {
+            var px = PacMan.PacManSingleton.XPos;
+            var py = PacMan.PacManSingleton.YPos;
+
+            bool foundEnergizer = DotManager.DotMgrSingleton.FindClosestEnergizerTo (px, py, out int ex, out int ey);
+
+            if (!foundEnergizer) {
+                BlinkyBrain ();
+                return;
+            }
+
+            var targetX = (px + ex) / 2;
+            var targetY = (py + ey) / 2;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void RightyBrain ()
+        {
+            var px = PacMan.PacManSingleton.XPos;
+            var py = PacMan.PacManSingleton.YPos;
+
+            var dx = px - XPos;
+            var dy = py - YPos;
+
+            var hdx = dx / 2;
+            var hdy = dy / 2;
+
+            var targetX = XPos + hdx + hdy;
+            var targetY = YPos + hdy - hdx;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void LeftyBrain ()
+        {
+            var px = PacMan.PacManSingleton.XPos;
+            var py = PacMan.PacManSingleton.YPos;
+
+            var dx = px - XPos;
+            var dy = py - YPos;
+
+            var hdx = dx / 2;
+            var hdy = dy / 2;
+
+            var targetX = XPos + hdx - hdy;
+            var targetY = YPos + hdy + hdx;
+
+            DBG_x = Mathf.RoundToInt (targetX);
+            DBG_y = Mathf.RoundToInt (targetY);
+
+            MoveToTarget (targetX, targetY);
+        }
+
+        private void JamaalBrain ()
+        {
+            // steer towards location n spaces behind pac man
+
+            int behind = 2;
+
+            var pacMan = PacMan.PacManSingleton;
+            var pacDir = pacMan.MoveDir;
+
+            var pacX = pacMan.XPos;
+            var pacY = pacMan.YPos;
+
+            var pacDX = 0;
+            var pacDY = 0;
+            GetDeltaPixelsFromDirection (pacDir, out pacDX, out pacDY);
+
+            var targetX = pacX - pacDX * behind;
+            var targetY = pacY - pacDY * behind;
+
+            MoveToTarget (targetX, targetY);
         }
 
         private void CagedBrain ()
@@ -254,6 +534,8 @@ namespace BDG
 
         public override void Update (float dt)
         {
+            _lifeElapsed += dt;
+
             var pm = PacMan.PacManSingleton;
 
             if (pm.IsAlive && CollidedWithPacMan ()) {
@@ -313,7 +595,6 @@ namespace BDG
                 _cagedElapsed += dt;
                 break;
             }
-
 
             base.Update (dt);
         }

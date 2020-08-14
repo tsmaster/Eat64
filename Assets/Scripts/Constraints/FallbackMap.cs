@@ -11,6 +11,8 @@ namespace BDG
         private readonly int _mapX;
         private readonly int _mapY;
 
+        public Ghost.GhostName [] GhostNames;
+
         public FallbackMap (int bmx, int bmy)
         {
             _mapX = bmx;
@@ -27,6 +29,13 @@ namespace BDG
             _randomGenerator = new System.Random (h);
 
             _constraintState = new ConstraintState ();
+
+            GhostNames = new Ghost.GhostName[] {
+                Ghost.GhostName.BLINKY,
+                Ghost.GhostName.PINKY,
+                Ghost.GhostName.INKY,
+                Ghost.GhostName.CLYDE};
+
 
             Constrain (exitEast, exitNorth, exitWest, exitSouth, _randomGenerator);
         }
@@ -147,6 +156,12 @@ namespace BDG
             var ts = _constraintState._tileSets [y, x];
 
             return ts [0];
+        }
+
+
+        public Ghost.GhostName GetSelectedGhost (int i)
+        {
+            return GhostNames [i];
         }
     }
 }

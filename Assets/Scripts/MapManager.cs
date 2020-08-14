@@ -8,9 +8,12 @@ namespace BDG
     {
         Tile [,] _tiles;
 
+        Ghost.GhostName [] _ghostNames;
+
         public MapManager ()
         {
             _tiles = new Tile [8, 8];
+            _ghostNames = new Ghost.GhostName [4];
         }
 
         public static MapManager MapMgrSingleton { get; set; }
@@ -137,6 +140,16 @@ namespace BDG
                 MovementDirection.WEST,
                 MovementDirection.SOUTH 
                 };
+        }
+
+        internal void SetGhost (int i, Ghost.GhostName name)
+        {
+            _ghostNames [i] = name;
+        }
+
+        public Ghost.GhostName GetGhost (int i)
+        {
+            return _ghostNames [i];
         }
     }
 }

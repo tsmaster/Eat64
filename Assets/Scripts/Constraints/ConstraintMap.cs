@@ -14,6 +14,8 @@ namespace BDG
         private bool _nsSymmetry;
         private ConstraintState _foundSolution;
 
+        Ghost.GhostName [] GhostNames;
+
         public enum IsWall
         {
             NO,
@@ -55,6 +57,63 @@ namespace BDG
             for (int i = 0; i < 1; ++i) {
                 AddInitialConstraintState (exitEast, exitNorth, exitWest, exitSouth, _randomGenerator);
             }
+
+            GhostNames = new Ghost.GhostName [4];
+            for (int i = 0; i < 4; ++i) {
+                GhostNames [i] = PickRandomGhost (_randomGenerator, i);
+            }
+        }
+
+        bool IsGhostNameInUse (Ghost.GhostName gn, int used)
+        {
+            for (int i = 0; i < used; ++i) {
+                if (GhostNames [i] == gn) {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        Ghost.GhostName PickRandomGhost (System.Random r, int i)
+        {
+            Debug.LogFormat ("Picking ghost for slot {0}", i);
+            var startIndex = r.Next (12);
+            Debug.LogFormat ("starting with ghost index {0}", startIndex);
+
+            for (int offset = 0; offset < 12; ++offset) {
+                int candIndex = (startIndex + offset) % 12;
+                Ghost.GhostName candName = IndexToGhostName (candIndex);
+                Debug.LogFormat ("checking ghost {0}", candName);
+
+                if (!IsGhostNameInUse (candName, i)) {
+                    Debug.LogFormat ("looks good");
+                    return candName;
+                }
+            }
+
+            return Ghost.GhostName.BLINKY;
+        }
+
+        Ghost.GhostName IndexToGhostName (int i)
+        {
+            Ghost.GhostName [] names = {
+                Ghost.GhostName.BLINKY,
+                Ghost.GhostName.PINKY,
+                Ghost.GhostName.INKY,
+                Ghost.GhostName.CLYDE,
+
+                Ghost.GhostName.JAMAAL,
+                Ghost.GhostName.LEFTY,
+                Ghost.GhostName.RIGHTY,
+                Ghost.GhostName.INTERCEPTOR,
+
+                Ghost.GhostName.QUADDY,
+                Ghost.GhostName.HILBERT,
+                Ghost.GhostName.CLOCKY,
+                Ghost.GhostName.LILBRO
+            };
+
+            return names [i];
         }
 
         public bool Constrain ()
@@ -176,6 +235,11 @@ namespace BDG
             if (!s.IsOverTight ()) {
                 _constraintStates.Add (s);
             }
+        }
+
+        public Ghost.GhostName GetSelectedGhost (int i)
+        {
+            return GhostNames [i];
         }
     }
 

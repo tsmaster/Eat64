@@ -3,7 +3,7 @@ namespace BDG
 {
     public class Hilbert : ArrayTargetBrain
     {
-        private readonly int [,] _targetOrder = {
+        public static readonly int [,] TargetOrder = {
             {21, 20, 19, 16, 15, 14, 01, 00 },
             {22, 23, 18, 17, 12, 13, 02, 03 },
             {25, 24, 29, 30, 11, 08, 07, 04 },

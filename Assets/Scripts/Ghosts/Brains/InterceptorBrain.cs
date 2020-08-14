@@ -1,5 +1,5 @@
 ﻿using System;
-namespace AssemblyCSharp.Assets.Scripts.Ghosts.Brains
+namespace BDG
 {
     public class InterceptorBrain
     {

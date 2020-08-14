@@ -242,10 +242,15 @@ namespace BDG
 
         void AddGhosts ()
         {
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.BLINKY, 40, 40, Ghost.GhostState.CHASE, 9, -1);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.PINKY, 24, 32, Ghost.GhostState.CAGED, -1, -1);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.INKY, 28, 32, Ghost.GhostState.CAGED, -1, 9);
-            GhostManager.GhostMgrSingleton.AddGhost (Ghost.GhostName.CLYDE, 32, 32, Ghost.GhostState.CAGED, 9, 9);
+            Ghost.GhostName g0 = MapManager.MapMgrSingleton.GetGhost (0);
+            Ghost.GhostName g1 = MapManager.MapMgrSingleton.GetGhost (1);
+            Ghost.GhostName g2 = MapManager.MapMgrSingleton.GetGhost (2);
+            Ghost.GhostName g3 = MapManager.MapMgrSingleton.GetGhost (3);
+
+            GhostManager.GhostMgrSingleton.AddGhost (g0, 40, 40, Ghost.GhostState.CHASE, 9, -1);
+            GhostManager.GhostMgrSingleton.AddGhost (g1, 24, 32, Ghost.GhostState.CAGED, -1, -1);
+            GhostManager.GhostMgrSingleton.AddGhost (g2, 28, 32, Ghost.GhostState.CAGED, -1, 9);
+            GhostManager.GhostMgrSingleton.AddGhost (g3, 32, 32, Ghost.GhostState.CAGED, 9, 9);
         }
 
         void ResetPacMan ()
@@ -266,6 +271,10 @@ namespace BDG
             }
 
             MapManager.MapMgrSingleton.MakeDistToHomeValues ();
+            MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.BLINKY);
+            MapManager.MapMgrSingleton.SetGhost (1, Ghost.GhostName.PINKY);
+            MapManager.MapMgrSingleton.SetGhost (2, Ghost.GhostName.INKY);
+            MapManager.MapMgrSingleton.SetGhost (3, Ghost.GhostName.CLYDE);
             //Debug.Log ("made distances");
         }
 
@@ -289,6 +298,20 @@ namespace BDG
             }
 
             MapManager.MapMgrSingleton.MakeDistToHomeValues ();
+
+            //MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.JAMAAL);
+            //MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.LEFTY);
+            //MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.RIGHTY);
+            //MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.BLINKY);
+            //MapManager.MapMgrSingleton.SetGhost (1, Ghost.GhostName.LILBRO);
+            //MapManager.MapMgrSingleton.SetGhost (1, Ghost.GhostName.INTERCEPTOR);
+            //MapManager.MapMgrSingleton.SetGhost (0, Ghost.GhostName.HILBERT);
+
+            for (int i = 0; i < 4; ++i) {
+                Ghost.GhostName gn = mapGen.GetSelectedGhost (i);
+                Debug.LogFormat ("Assigning {0} {1}", i, gn);
+                MapManager.MapMgrSingleton.SetGhost (i, gn);
+            }
             //Debug.Log ("made distances");
         }
 
@@ -438,6 +461,9 @@ namespace BDG
             pacMan.Draw (_displayTexture);
 
             GhostManager.GhostMgrSingleton.Draw (_displayTexture);
+
+            // Debug display
+            //DrawUtil.SetPixel (_displayTexture, Ghost.DBG_x, Ghost.DBG_y, new Color (0, 1, 0));
 
             _displayTexture.Apply ();
         }

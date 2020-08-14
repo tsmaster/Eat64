@@ -83,5 +83,33 @@ namespace BDG
         {
             return _dots.Count == 0;
         }
+
+        internal bool FindClosestEnergizerTo (float px, float py, out int ex, out int ey)
+        {
+            bool foundAny = false;
+            float closestDist = -1.0f;
+
+            ex = -1;
+            ey = -1;
+
+            foreach (var d in _dots) {
+                if (!d.isEnergizer) {
+                    continue;
+                }
+
+                float dx = px - d.x;
+                float dy = py - d.y;
+
+                float distSqr = dx * dx + dy * dy;
+
+                if ((!foundAny) || (distSqr < closestDist)) {
+                    ex = d.x;
+                    ey = d.y;
+                    closestDist = distSqr;
+                    foundAny = true;
+                }
+            }
+            return foundAny;
+        }
     }
 }

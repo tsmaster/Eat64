@@ -23,14 +23,73 @@ namespace BDG
 
         public void QueueMovementDirection (MovementDirection dir)
         {
+            //Debug.LogFormat ("Queuing movement direction {0}", dir);
             _queuedMovementDirection = dir;
 
             var t = MapManager.MapMgrSingleton.GetTileForPixel (XPos, YPos);
-            if ((MoveDir == MovementDirection.NONE) &&
-                (t.CanCharMoveInDirection (this, dir))) {
-                MoveDir = dir;
-                SetStops (dir, XPos, YPos);
+            if (MoveDir == MovementDirection.NONE) {
+                bool canMove = true;
+                if (CenteredOnTile (XPos, YPos, t)) {
+                    //Debug.LogFormat ("centered");
+
+                    canMove = t.CanCharMoveInDirection (this, dir);
+                } else {
+                    // figure out off-center
+                    //Debug.LogFormat ("offcenter");
+                    canMove = CanMoveOffCenter (XPos, YPos, t, dir);
+                }
+                if (canMove) {
+                    MoveDir = dir;
+                    SetStops (dir, XPos, YPos);
+                } else {
+                    Debug.LogFormat ("bonk!");
+                    //SoundMgr.Singleton.Play (SoundMgr.Sound.ClearLevel);
+                }
             }
+        }
+
+        private bool CanMoveOffCenter (float xPos, float yPos, Tile t, MovementDirection dir)
+        {
+            var ix = Mathf.RoundToInt (xPos);
+            var iy = Mathf.RoundToInt (yPos);
+
+            var tpx = t.TileX * 8;
+            var tpy = 56 - t.TileY * 8;
+
+            if (ix != tpx) {
+                // offset horiz
+                if ((dir == MovementDirection.NORTH) ||
+                    (dir == MovementDirection.SOUTH)) {
+                    return false;
+                }
+                if (ix > tpx) {
+                    // pac to east of tile
+                    return t.CanCharMoveInDirection (this, MovementDirection.EAST);
+                } else {
+                    return t.CanCharMoveInDirection (this, MovementDirection.WEST);
+                }
+            } else {
+                // offset vert (should never happen?)
+                if ((dir == MovementDirection.EAST) ||
+                    (dir == MovementDirection.WEST)) {
+                    return false;
+                }
+                if (ix > tpx) {
+                    // pac to north of tile
+                    return t.CanCharMoveInDirection (this, MovementDirection.NORTH);
+                } else {
+                    return t.CanCharMoveInDirection (this, MovementDirection.SOUTH);
+                }
+            }
+        }
+
+        bool CenteredOnTile (float x, float y, Tile t) {
+            var ix = Mathf.RoundToInt (x);
+            var iy = Mathf.RoundToInt (y);
+
+            var tpx = t.TileX * 8;
+            var tpy = 56 - t.TileY * 8;
+            return ((ix == tpx) && (iy == tpy));
         }
 
         protected override int GetSourceX ()
