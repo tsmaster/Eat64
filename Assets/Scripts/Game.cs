@@ -56,6 +56,9 @@ namespace BDG
         [SerializeField]
         AudioClip clearLevelSound;
 
+        [SerializeField]
+        List<DifficultyDesc> difficulties;
+
         Texture2D _displayTexture;
 
         public enum Difficulty
@@ -104,7 +107,6 @@ namespace BDG
         private const float _readyDuration = 2.0f;
 
         private bool _hasCompletedLevel = false;
-        private Difficulty _difficulty = Difficulty.Normal;
         private int _menuCursorRow;
         private float _menuCursorElapsed;
         private float _wizardElapsed;
@@ -123,6 +125,9 @@ namespace BDG
             Sprite sprite = Sprite.Create (_displayTexture, new Rect (0, 0, 64, 64), Vector2.zero);
             displayImage.sprite = sprite;
 
+            DiffMgr.Singleton = new DiffMgr (difficulties);
+            DiffMgr.Singleton.Difficulty = Difficulty.Normal;
+
             pacMan = new PacMan (spriteSheet,
                 28, 8);
             PacMan.PacManSingleton = pacMan;
@@ -140,6 +145,7 @@ namespace BDG
             MapManager.MapMgrSingleton = new MapManager ();
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
             GhostManager.GhostMgrSingleton = new GhostManager (ghostSpriteSheet);
+
             GameStateMgr.GameStateMgrSingleton = new GameStateMgr ();
             SetGameState (GameStateMgr.GameState.BDG_LOGO);
 
@@ -148,31 +154,18 @@ namespace BDG
 
         void StartGame (int x, int y)
         {
+            BigMapManager.BigMapMgrSingleton.ResetClearedList ();
             bigMapX = x;
             bigMapY = y;
             InitializeLevel (bigMapX, bigMapY);
             StartPacManLives ();
             ResetPacMan ();
             SetGameState (GameStateMgr.GameState.READY);
-            BigMapManager.BigMapMgrSingleton.ResetClearedList ();
         }
 
         private void StartPacManLives ()
         {
-            switch (_difficulty) {
-            case Difficulty.Easy:
-                _curPacManLives = 5;
-                break;
-            case Difficulty.Normal:
-                _curPacManLives = 3;
-                break;
-            case Difficulty.Hard:
-                _curPacManLives = 2;
-                break;
-            case Difficulty.Extreme:
-                _curPacManLives = 1;
-                break;
-            }
+            _curPacManLives = DiffMgr.Singleton.GetCurDiff ().startingLives;
         }
 
         void InitializeLevel (int bmx, int bmy) {
@@ -199,14 +192,16 @@ namespace BDG
 
         void AddDots ()
         {
-            for (int x = 8; x <= 48; x += 8) {
-                DotManager.DotMgrSingleton.AddDot (0, x, false);
-                DotManager.DotMgrSingleton.AddDot (56, x, false);
-                DotManager.DotMgrSingleton.AddDot (x, 0, false);
-                DotManager.DotMgrSingleton.AddDot (x, 56, false);
+            if (DiffMgr.Singleton.GetCurDiff ().outerDots) {
+                for (int x = 8; x <= 48; x += 8) {
+                    DotManager.DotMgrSingleton.AddDot (0, x, false);
+                    DotManager.DotMgrSingleton.AddDot (56, x, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 0, false);
+                    DotManager.DotMgrSingleton.AddDot (x, 56, false);
+                }
             }
 
-            if (_difficulty != Difficulty.Easy) {
+            if (DiffMgr.Singleton.GetCurDiff().middleDots) {
                 for (int x = 16; x <= 40; x += 8) {
                     DotManager.DotMgrSingleton.AddDot (8, x, false);
                     DotManager.DotMgrSingleton.AddDot (48, x, false);
@@ -219,8 +214,7 @@ namespace BDG
                 DotManager.DotMgrSingleton.AddDot (48, 48, false);
             }
 
-            if ((_difficulty == Difficulty.Hard) ||
-                (_difficulty == Difficulty.Extreme)) {
+            if (DiffMgr.Singleton.GetCurDiff ().innerDots) {
                 for (int x = 24; x <= 32; x += 8) {
                     DotManager.DotMgrSingleton.AddDot (16, x, false);
                     DotManager.DotMgrSingleton.AddDot (40, x, false);
@@ -232,7 +226,6 @@ namespace BDG
                 DotManager.DotMgrSingleton.AddDot (16, 40, false);
                 DotManager.DotMgrSingleton.AddDot (40, 40, false);
             }
-
 
             DotManager.DotMgrSingleton.AddDot (0, 0, true);
             DotManager.DotMgrSingleton.AddDot (0, 56, true);
@@ -433,6 +426,12 @@ namespace BDG
                     SoundMgr.Singleton.ToggleOn ();
                 }
 
+                if (Input.GetKeyDown (KeyCode.Escape)) {
+                    // TODO add game over state
+                    SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                }
+
+
 
                 pacMan.Update (dt);
                 GhostManager.GhostMgrSingleton.Update (dt);
@@ -632,8 +631,10 @@ namespace BDG
                     break;
                 case 1:
                     // diff
-                    if (_difficulty == Difficulty.Extreme) {
-                        _difficulty = Difficulty.Easy;
+                    Difficulty d = DiffMgr.Singleton.Difficulty;
+
+                    if (d == Difficulty.Extreme) {
+                        DiffMgr.Singleton.Difficulty = Difficulty.Easy;
                     } else {
                         IncreaseDifficulty ();
                     }
@@ -709,15 +710,16 @@ namespace BDG
 
         private void IncreaseDifficulty ()
         {
-            switch (_difficulty) {
+            Difficulty d = DiffMgr.Singleton.Difficulty;
+            switch (d) {
             case Difficulty.Easy:
-                _difficulty = Difficulty.Normal;
+                DiffMgr.Singleton.Difficulty = Difficulty.Normal;
                 break;
             case Difficulty.Normal:
-                _difficulty = Difficulty.Hard;
+                DiffMgr.Singleton.Difficulty = Difficulty.Hard;
                 break;
             case Difficulty.Hard:
-                _difficulty = Difficulty.Extreme;
+                DiffMgr.Singleton.Difficulty = Difficulty.Extreme;
                 break;
             case Difficulty.Extreme:
                 break;
@@ -726,17 +728,18 @@ namespace BDG
 
         private void DecreaseDifficulty ()
         {
-            switch (_difficulty) {
+            Difficulty d = DiffMgr.Singleton.Difficulty;
+            switch (d) {
             case Difficulty.Easy:
                 break;
             case Difficulty.Normal:
-                _difficulty = Difficulty.Easy;
+                DiffMgr.Singleton.Difficulty = Difficulty.Easy;
                 break;
             case Difficulty.Hard:
-                _difficulty = Difficulty.Normal;
+                DiffMgr.Singleton.Difficulty = Difficulty.Normal;
                 break;
             case Difficulty.Extreme:
-                _difficulty = Difficulty.Hard;
+                DiffMgr.Singleton.Difficulty = Difficulty.Hard;
                 break;
             }
         }
@@ -755,7 +758,7 @@ namespace BDG
             DrawUtil.DrawSpriteAlpha (widgetsTexture, _displayTexture, 0, 7 * soundOff, 30, 7, 34, 14);
 
             int dispOff = 0;
-            switch (_difficulty) {
+            switch (DiffMgr.Singleton.Difficulty) {
             case Difficulty.Easy:
                 dispOff = 3;
                 break;

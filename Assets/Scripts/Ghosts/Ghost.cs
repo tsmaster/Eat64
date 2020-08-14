@@ -32,11 +32,8 @@ namespace BDG
         }
 
         GhostName _name;
-        float _scatterLength;
         float _scatterElapsed;
-        float _chaseLength;
         float _chaseElapsed;
-        float _frightenedLength;
         float _frightenedElapsed;
         float _cagedLength;
         float _cagedElapsed;
@@ -58,11 +55,8 @@ namespace BDG
         public Ghost (Texture2D spritesheet, GhostName name, int xPos, int yPos, GhostState startState) : base(spritesheet, 8,  8, xPos, yPos)
         {
             _name = name;
-            _scatterLength = 0.1f; // TODO reset to 10
             _scatterElapsed = 0.0f;
-            _chaseLength = 8.0f;
             _chaseElapsed = 0.0f;
-            _frightenedLength = 6.0f;
             _frightenedElapsed = 0.0f;
 
             _cagedLength = 1.5f;
@@ -78,8 +72,6 @@ namespace BDG
             _startPosY = yPos;
             _startState = startState;
             State = startState;
-
-            Speed = 10.0f;
         }
 
         internal void ReturnToStart ()
@@ -120,7 +112,8 @@ namespace BDG
 
         int PeriodsUntilFrightenedElapsed ()
         {
-            float floatSecs = _frightenedLength - _frightenedElapsed;
+            float fl = DiffMgr.Singleton.GetCurDiff ().ghostFrightenedDuration;
+            float floatSecs = fl - _frightenedElapsed;
             return Mathf.FloorToInt (floatSecs / _blinkLength);
         }
 
@@ -571,7 +564,9 @@ namespace BDG
             switch (State) {
             case GhostState.CHASE:
                 _chaseElapsed += dt;
-                if (_chaseElapsed >= _chaseLength) {
+                float cl = DiffMgr.Singleton.GetCurDiff ().ghostChaseDuration;
+
+                if (_chaseElapsed >= cl) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
                     SetGhostState(GhostState.SCATTER);
@@ -579,7 +574,9 @@ namespace BDG
                 break;
             case GhostState.SCATTER:
                 _scatterElapsed += dt;
-                if (_scatterElapsed >= _scatterLength) {
+                float sl = DiffMgr.Singleton.GetCurDiff ().ghostScatterDuration;
+
+                if (_scatterElapsed >= sl) {
                     MoveDir = Character.OppositeMoveDirection (MoveDir);
                     SetStops (MoveDir, XPos, YPos);
                     SetGhostState(GhostState.CHASE);
@@ -587,7 +584,9 @@ namespace BDG
                 break;
             case GhostState.FRIGHTENED:
                 _frightenedElapsed += dt;
-                if (_frightenedElapsed >= _frightenedLength) {
+                float fl = DiffMgr.Singleton.GetCurDiff ().ghostFrightenedDuration;
+
+                if (_frightenedElapsed >= fl) {
                     SetGhostState(GhostState.CHASE);
                 }
                 break;
@@ -762,6 +761,21 @@ namespace BDG
             MoveDir = bestDir;
             SetStops (MoveDir, XPos, YPos);
             //Debug.LogFormat ("{0} Moving {1}", _name, MoveDir);
+        }
+
+        public override float Speed ()
+        {
+            DifficultyDesc dd = DiffMgr.Singleton.GetCurDiff ();
+            switch (State) {
+            case GhostState.SCATTER:
+                return dd.ghostScatterSpeed;
+            case GhostState.CHASE:
+                return dd.ghostChaseSpeed;
+            case GhostState.FRIGHTENED:
+                return dd.ghostFrightenedSpeed;
+            default:
+                return 10.0f;
+            }
         }
     }
 }

@@ -1,34 +1,36 @@
 ﻿<Properties>
-  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Ghosts/Brains/LilBroBrain.cs">
+  <MonoDevelop.Ide.Workbench ActiveDocument="Assets/Scripts/Game.cs">
     <Files>
-      <File FileName="Assets/Scripts/Ghosts/Ghost.cs" Line="262" Column="65" />
-      <File FileName="Assets/Scripts/Game.cs" Line="96" Column="10" />
-      <File FileName="Assets/Scripts/Ghosts/GhostManager.cs" Line="52" Column="67" />
-      <File FileName="Assets/Scripts/MapManager.cs" Line="45" Column="19" />
+      <File FileName="Assets/Scripts/Ghosts/Ghost.cs" Line="273" Column="14" />
+      <File FileName="Assets/Scripts/Game.cs" Line="173" Column="53" />
+      <File FileName="Assets/Scripts/Ghosts/GhostManager.cs" Line="19" Column="29" />
+      <File FileName="Assets/Scripts/MapManager.cs" Line="26" Column="23" />
       <File FileName="Assets/Scripts/Character.cs" Line="50" Column="21" />
-      <File FileName="Assets/Scripts/Tile.cs" Line="208" Column="36" />
-      <File FileName="Assets/Scripts/PacMan.cs" Line="113" Column="13" />
-      <File FileName="Assets/Scripts/DotManager.cs" Line="70" Column="73" />
+      <File FileName="Assets/Scripts/Tile.cs" Line="45" Column="1" />
+      <File FileName="Assets/Scripts/PacMan.cs" Line="39" Column="69" />
+      <File FileName="Assets/Scripts/DotManager.cs" Line="88" Column="10" />
       <File FileName="Assets/Scripts/GameStateMgr.cs" Line="15" Column="19" />
-      <File FileName="Assets/Scripts/DrawUtil.cs" Line="49" Column="36" />
+      <File FileName="Assets/Scripts/DrawUtil.cs" Line="53" Column="10" />
       <File FileName="Assets/Scripts/BigMapManager.cs" Line="42" Column="25" />
       <File FileName="Assets/Scripts/BigTile.cs" Line="242" Column="28" />
       <File FileName="Assets/Scripts/BigTileCell.cs" Line="18" Column="10" />
       <File FileName="Assets/Scripts/ChunkBreaker.cs" Line="22" Column="1" />
       <File FileName="Assets/Scripts/Constraints/ConstraintState.cs" Line="100" Column="41" />
-      <File FileName="Assets/Scripts/Constraints/ConstraintMap.cs" Line="160" Column="50" />
-      <File FileName="Assets/Scripts/Constraints/FallbackMap.cs" Line="148" Column="1" />
-      <File FileName="Assets/Scripts/Constraints/IBaseMapGenerator.cs" Line="6" Column="41" />
-      <File FileName="Assets/Scripts/Ghosts/Brains/Clocky.cs" Line="4" Column="45" />
+      <File FileName="Assets/Scripts/Constraints/ConstraintMap.cs" Line="244" Column="1" />
+      <File FileName="Assets/Scripts/Constraints/FallbackMap.cs" Line="156" Column="39" />
+      <File FileName="Assets/Scripts/Constraints/IBaseMapGenerator.cs" Line="7" Column="50" />
+      <File FileName="Assets/Scripts/Ghosts/Brains/Clocky.cs" Line="6" Column="22" />
       <File FileName="Assets/Scripts/Ghosts/Brains/Lefty.cs" Line="9" Column="6" />
       <File FileName="Assets/Scripts/Ghosts/Brains/OffsetSteerBrain.cs" Line="8" Column="10" />
       <File FileName="Assets/Scripts/Ghosts/Brains/Righty.cs" Line="5" Column="6" />
       <File FileName="Assets/Scripts/Ghosts/Brains/ArrayTargetBrain.cs" Line="11" Column="1" />
-      <File FileName="Assets/Scripts/Ghosts/Brains/Hilbert.cs" Line="4" Column="44" />
-      <File FileName="Assets/Scripts/Ghosts/Brains/QuadTree.cs" Line="4" Column="43" />
+      <File FileName="Assets/Scripts/Ghosts/Brains/Hilbert.cs" Line="6" Column="55" />
+      <File FileName="Assets/Scripts/Ghosts/Brains/QuadTree.cs" Line="6" Column="55" />
       <File FileName="Assets/Scripts/Ghosts/Brains/JamaalBrain.cs" Line="6" Column="14" />
       <File FileName="Assets/Scripts/Ghosts/Brains/InterceptorBrain.cs" Line="2" Column="14" />
-      <File FileName="Assets/Scripts/Ghosts/Brains/LilBroBrain.cs" Line="2" Column="11" />
+      <File FileName="Assets/Scripts/Ghosts/Brains/LilBroBrain.cs" Line="7" Column="10" />
+      <File FileName="Assets/Scripts/DifficultyDesc.cs" Line="16" Column="1" />
+      <File FileName="Assets/Scripts/DiffMgr.cs" Line="32" Column="14" />
     </Files>
     <Pads>
       <Pad Id="ProjectPad">
@@ -37,12 +39,7 @@
             <Node name="Assembly-CSharp" expanded="True">
               <Node name="Assets" expanded="True">
                 <Node name="Scripts" expanded="True">
-                  <Node name="Constraints" expanded="True" />
-                  <Node name="Ghosts" expanded="True">
-                    <Node name="Brains" expanded="True">
-                      <Node name="LilBroBrain.cs" selected="True" />
-                    </Node>
-                  </Node>
+                  <Node name="Game.cs" selected="True" />
                 </Node>
               </Node>
             </Node>

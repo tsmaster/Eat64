@@ -14,8 +14,12 @@ namespace BDG
             base (spritesheet, 8, 8, xPos, yPos)
         {
             _queuedMovementDirection = MovementDirection.NONE;
-            Speed = 12.0f;
             IsAlive = true;
+        }
+
+        public override float Speed ()
+        {
+            return DiffMgr.Singleton.GetCurDiff ().pacManSpeed;
         }
 
         public static PacMan PacManSingleton {get; set;}

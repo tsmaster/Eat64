@@ -21,7 +21,6 @@ namespace BDG
         private int _width;
         private int _height;
 
-        protected float Speed { get; set; } // pixels per second
         private int _stopX;
         private int _stopY;
         public MovementDirection MoveDir { get; set; }
@@ -35,9 +34,9 @@ namespace BDG
 
             _width = width;
             _height = height;
-
-            Speed = 2.0f;
         }
+
+        public abstract float Speed (); // pixels per second
 
         public void SetPos (int x, int y) {
             XPos = x;
@@ -145,7 +144,7 @@ namespace BDG
 
         virtual public void Update (float dt)
         {
-            float units = Speed * dt;
+            float units = Speed() * dt;
             MoveInDirection (MoveDir, units);
         }
 

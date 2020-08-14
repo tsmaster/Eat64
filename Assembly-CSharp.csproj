@@ -64,6 +64,8 @@
      <Compile Include="Assets\Scripts\Constraints\ConstraintState.cs" />
      <Compile Include="Assets\Scripts\Constraints\FallbackMap.cs" />
      <Compile Include="Assets\Scripts\Constraints\IBaseMapGenerator.cs" />
+     <Compile Include="Assets\Scripts\DifficultyDesc.cs" />
+     <Compile Include="Assets\Scripts\DiffMgr.cs" />
      <Compile Include="Assets\Scripts\DotManager.cs" />
      <Compile Include="Assets\Scripts\DrawUtil.cs" />
      <Compile Include="Assets\Scripts\Game.cs" />
