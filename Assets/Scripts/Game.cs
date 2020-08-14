@@ -800,8 +800,8 @@ namespace BDG
             DrawSmallMaze ();
 
             // draw number of lives remaining
-            DrawUtil.DrawSpriteAlpha (numbersTexture, _displayTexture, 7*_curPacManLives, 0, 7, 7, 20, 30);
-            DrawUtil.DrawSpriteAlpha (livesTexture, _displayTexture, 0, 0, 31, 7, 30, 30);
+            DrawUtil.DrawSpriteAlpha (numbersTexture, _displayTexture, 7*_curPacManLives, 0, 7, 7, 13, 30);
+            DrawUtil.DrawSpriteAlpha (livesTexture, _displayTexture, 0, 0, 31, 7, 21, 30);
             _displayTexture.Apply ();
         }
         #endregion // READY
