@@ -18,13 +18,28 @@ namespace BDG
         Texture2D ghostSpriteSheet;
 
         [SerializeField]
+        Texture2D wizardTexture;
+
+        [SerializeField]
         Texture2D titleTexture;
+
+        [SerializeField]
+        Texture2D menuTexture;
+
+        [SerializeField]
+        Texture2D diffTexture;
 
         [SerializeField]
         Texture2D livesTexture;
 
         [SerializeField]
         Texture2D numbersTexture;
+
+        [SerializeField]
+        Texture2D widgetsTexture;
+
+        [SerializeField]
+        Texture2D aboutTexture;
 
         [SerializeField]
         AudioClip eatDotSound;
@@ -90,6 +105,12 @@ namespace BDG
 
         private bool _hasCompletedLevel = false;
         private Difficulty _difficulty = Difficulty.Normal;
+        private int _menuCursorRow;
+        private float _menuCursorElapsed;
+        private float _wizardElapsed;
+        private float _wizardDuration = 2.0f;
+        private float _aboutElapsed;
+        private float _aboutDuration = 5.0f;
 
         // Start is called before the first frame update
         void Start ()
@@ -120,7 +141,7 @@ namespace BDG
             DotManager.DotMgrSingleton = new DotManager (spriteSheet);
             GhostManager.GhostMgrSingleton = new GhostManager (ghostSpriteSheet);
             GameStateMgr.GameStateMgrSingleton = new GameStateMgr ();
-            SetGameState (GameStateMgr.GameState.TITLE_CARD);
+            SetGameState (GameStateMgr.GameState.BDG_LOGO);
 
             BigMapManager.BigMapMgrSingleton = new BigMapManager ();
         }
@@ -278,6 +299,7 @@ namespace BDG
 
             switch (GameStateMgr.GameStateMgrSingleton.CurrentGameState) {
             case GameStateMgr.GameState.BDG_LOGO:
+                UpdateWizard (dt);
                 break;
             case GameStateMgr.GameState.LOREZJAM_CARD:
                 break;
@@ -288,6 +310,7 @@ namespace BDG
                 UpdateMainMenu (dt);
                 break;
             case GameStateMgr.GameState.ABOUT:
+                UpdateAbout (dt);
                 break;
             case GameStateMgr.GameState.DEDICATION:
                 break;
@@ -447,6 +470,8 @@ namespace BDG
 
         void DrawBigMaze ()
         {
+            DrawUtil.FillTexture (_displayTexture, new Color (0.25f, 0.25f, 0.75f));
+
             Color wallColor = new Color (0.5f, 0.5f, 1.0f);
             Color openColor = new Color (0, 0, 0);
 
@@ -511,6 +536,22 @@ namespace BDG
         }
         #endregion // BIG MAZE
 
+        #region WIZARD
+        void UpdateWizard (float dt)
+        {
+            _wizardElapsed += dt;
+            if (_wizardElapsed >= _wizardDuration) {
+                SetGameState (GameStateMgr.GameState.TITLE_CARD);
+                return;
+            }
+            DrawWizard ();
+        }
+        void DrawWizard ()
+        {
+            DrawUtil.DrawSpriteOpaque (wizardTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+            _displayTexture.Apply ();
+        }
+        #endregion // WIZARD
 
         #region TITLE
         void UpdateTitle (float dt)
@@ -524,24 +565,222 @@ namespace BDG
         }
         void DrawTitle ()
         {
-            DrawUtil.DrawSpriteOpaque (titleTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+            DrawUtil.FillTexture (_displayTexture, new Color (0, 0, 0));
+            DrawUtil.DrawSpriteOpaque (titleTexture, _displayTexture, 0, 0, 64, 64, 4, 24);
             _displayTexture.Apply ();
         }
         #endregion // TITLE
 
+        #region ABOUT
+        void UpdateAbout (float dt)
+        {
+            _aboutElapsed += dt;
+            if ((_aboutElapsed >= _aboutDuration) || (Input.anyKeyDown)) {
+                SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                return;
+            }
+            DrawAbout ();
+        }
+        void DrawAbout ()
+        {
+            DrawUtil.FillTexture (_displayTexture, new Color (0, 0, 0));
+            DrawUtil.DrawSpriteOpaque (aboutTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+            _displayTexture.Apply ();
+        }
+        #endregion // ABOUT
+
+
         #region MAIN_MENU
         void UpdateMainMenu (float dt)
         {
-            // TODO add selection here
-
+            _menuCursorElapsed += dt;
             DrawMainMenu ();
 
-            // TODO remove this
-            StartGame (2, 4);
+            if ((Input.GetKeyDown (KeyCode.Space)) ||
+                (Input.GetKeyDown (KeyCode.Return))) {
+
+                switch (_menuCursorRow) {
+                case 0:
+                    // go!
+                    StartGame (2, 4);
+                    break;
+                case 1:
+                    // diff
+                    if (_difficulty == Difficulty.Extreme) {
+                        _difficulty = Difficulty.Easy;
+                    } else {
+                        IncreaseDifficulty ();
+                    }
+                    break;
+                case 2:
+                    // sound
+                    SoundMgr.Singleton.ToggleOn ();
+                    break;
+                case 3:
+                    // about
+                    SetGameState (GameStateMgr.GameState.ABOUT);
+                    break;
+                }
+
+            }
+
+            if (Input.GetKeyDown (KeyCode.LeftArrow)) {
+                switch (_menuCursorRow) {
+                case 0:
+                    // go!
+                    // do nothing?
+                    break;
+                case 1:
+                    // diff
+                    DecreaseDifficulty ();
+                    break;
+                case 2:
+                    // sound
+                    SoundMgr.Singleton.IsOn = false;
+                    break;
+                case 3:
+                    // about
+                    // do nothing
+                    break;
+                }
+            } else if (Input.GetKeyDown (KeyCode.RightArrow)) {
+                switch (_menuCursorRow) {
+                case 0:
+                    // go!
+                    StartGame (2, 4);
+                    break;
+                case 1:
+                    // diff
+                    IncreaseDifficulty ();
+                    break;
+                case 2:
+                    // sound
+                    SoundMgr.Singleton.IsOn = true;
+                    break;
+                case 3:
+                    // about
+                    SetGameState (GameStateMgr.GameState.ABOUT);
+                    break;
+                }
+            }
+
+            if (Input.GetKeyDown (KeyCode.UpArrow)) {
+                MoveMenuCursorUp ();
+            } else if (Input.GetKeyDown (KeyCode.DownArrow)) {
+                MoveMenuCursorDown ();
+            }
+        }
+
+        private void MoveMenuCursorDown ()
+        {
+            _menuCursorRow = Math.Min(3, _menuCursorRow + 1);
+        }
+
+        private void MoveMenuCursorUp ()
+        {
+            _menuCursorRow = Math.Max (0, _menuCursorRow - 1);
+        }
+
+        private void IncreaseDifficulty ()
+        {
+            switch (_difficulty) {
+            case Difficulty.Easy:
+                _difficulty = Difficulty.Normal;
+                break;
+            case Difficulty.Normal:
+                _difficulty = Difficulty.Hard;
+                break;
+            case Difficulty.Hard:
+                _difficulty = Difficulty.Extreme;
+                break;
+            case Difficulty.Extreme:
+                break;
+            }
+        }
+
+        private void DecreaseDifficulty ()
+        {
+            switch (_difficulty) {
+            case Difficulty.Easy:
+                break;
+            case Difficulty.Normal:
+                _difficulty = Difficulty.Easy;
+                break;
+            case Difficulty.Hard:
+                _difficulty = Difficulty.Normal;
+                break;
+            case Difficulty.Extreme:
+                _difficulty = Difficulty.Hard;
+                break;
+            }
         }
 
         void DrawMainMenu ()
         {
+            DrawUtil.FillTexture (_displayTexture, new Color (0, 0, 0));
+            DrawUtil.DrawSpriteAlpha (menuTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+
+            int soundOff = 0;
+            if (SoundMgr.Singleton.IsOn) {
+                soundOff = 2;
+            } else {
+                soundOff = 1;
+            }
+            DrawUtil.DrawSpriteAlpha (widgetsTexture, _displayTexture, 0, 7 * soundOff, 30, 7, 34, 14);
+
+            int dispOff = 0;
+            switch (_difficulty) {
+            case Difficulty.Easy:
+                dispOff = 3;
+                break;
+            case Difficulty.Normal:
+                dispOff = 2;
+                break;
+            case Difficulty.Hard:
+                dispOff = 1;
+                break;
+            case Difficulty.Extreme:
+                dispOff = 0;
+                break;
+            }
+            DrawUtil.DrawSpriteAlpha (diffTexture, _displayTexture, 0, 7 * dispOff, 25, 7, 28, 21);
+
+            DrawMenuCursor ();
+            _displayTexture.Apply ();
+        }
+
+        private void DrawMenuCursor ()
+        {
+            var cursorY = 0;
+            bool fancy = false;
+            switch (_menuCursorRow) {
+            case 0: // play
+                cursorY = 34;
+                fancy = true;
+                break;
+            case 1: // diff
+                cursorY = 21;
+                break;
+            case 2: // sound
+                cursorY = 14;
+                break;
+            case 3: // about
+                cursorY = 4;
+                break;
+            }
+
+            if (!fancy) {
+                DrawUtil.DrawSpriteAlpha (widgetsTexture, _displayTexture, 0, 0, 7, 7, 0, cursorY);
+            } else {
+                var _menuCursorLoopLength = 0.85f;
+                var wrap = _menuCursorElapsed / _menuCursorLoopLength;
+                var m01 = wrap - Mathf.FloorToInt (wrap);
+                var width = 12;
+                var steps = Mathf.FloorToInt (width * m01);
+
+                DrawUtil.DrawSpriteAlpha (widgetsTexture, _displayTexture, 0, 0, 7, 7, 20 - width + steps, cursorY);
+                DrawUtil.DrawSpriteAlpha (widgetsTexture, _displayTexture, 7, 0, 7, 7, 39 + width - steps, cursorY);
+            }
         }
         #endregion // MAIN_MENU
 
@@ -577,13 +816,17 @@ namespace BDG
                 _titleElapsed = 0.0f;
                 break;
             case GameStateMgr.GameState.BDG_LOGO:
+                _wizardElapsed = 0.0f;
                 break;
             case GameStateMgr.GameState.LOREZJAM_CARD:
                 break;
             case GameStateMgr.GameState.MAIN_MENU:
                 //_mainMenu.Reset ();
+                _menuCursorRow = 0;
+                _menuCursorElapsed = 0.0f;
                 break;
             case GameStateMgr.GameState.ABOUT:
+                _aboutElapsed = 0.0f;
                 break;
             case GameStateMgr.GameState.DEDICATION:
                 break;

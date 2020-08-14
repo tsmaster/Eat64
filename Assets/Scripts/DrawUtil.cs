@@ -48,5 +48,17 @@ namespace BDG
         {
             displayTexture.SetPixel (px, py, drawColor);
         }
+
+        internal static void FillTexture (Texture2D displayTexture, Color color)
+        {
+            Color [] colors = new Color [64 * 64];
+
+            for (int x = 0; x < 64; ++x) {
+                for (int y = 0; y < 64; ++y) {
+                    colors [64 * y + x] = color;
+                }
+            }
+            displayTexture.SetPixels (colors);
+        }
     }
 }

@@ -68,6 +68,16 @@
      <Compile Include="Assets\Scripts\DrawUtil.cs" />
      <Compile Include="Assets\Scripts\Game.cs" />
      <Compile Include="Assets\Scripts\GameStateMgr.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\ArrayTargetBrain.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\Clocky.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\Hilbert.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\InterceptorBrain.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\JamaalBrain.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\Lefty.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\LilBroBrain.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\OffsetSteerBrain.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\QuadTree.cs" />
+     <Compile Include="Assets\Scripts\Ghosts\Brains\Righty.cs" />
      <Compile Include="Assets\Scripts\Ghosts\Ghost.cs" />
      <Compile Include="Assets\Scripts\Ghosts\GhostManager.cs" />
      <Compile Include="Assets\Scripts\MapManager.cs" />
