@@ -42,6 +42,9 @@ namespace BDG
         Texture2D aboutTexture;
 
         [SerializeField]
+        Texture2D gameOverTexture;
+
+        [SerializeField]
         AudioClip eatDotSound;
 
         [SerializeField]
@@ -112,7 +115,13 @@ namespace BDG
         private float _wizardElapsed;
         private float _wizardDuration = 2.0f;
         private float _aboutElapsed;
-        private float _aboutDuration = 5.0f;
+
+        private List<Ghost.GhostName> _paradeGhostNames;
+        private float _paradeSpeed = 8.0f;
+        private int _paradeSpacing = 8;
+        private List<Ghost> _paradeGhosts;
+        private float _gameOverElapsed;
+        private float _gameOverDuration = 3.0f;
 
         // Start is called before the first frame update
         void Start ()
@@ -317,8 +326,6 @@ namespace BDG
             case GameStateMgr.GameState.BDG_LOGO:
                 UpdateWizard (dt);
                 break;
-            case GameStateMgr.GameState.LOREZJAM_CARD:
-                break;
             case GameStateMgr.GameState.TITLE_CARD:
                 UpdateTitle (dt);
                 break;
@@ -327,10 +334,6 @@ namespace BDG
                 break;
             case GameStateMgr.GameState.ABOUT:
                 UpdateAbout (dt);
-                break;
-            case GameStateMgr.GameState.DEDICATION:
-                break;
-            case GameStateMgr.GameState.RULES:
                 break;
             case GameStateMgr.GameState.SMALL_MAZE:
                 UpdateSmallMaze (dt);
@@ -341,10 +344,33 @@ namespace BDG
             case GameStateMgr.GameState.READY:
                 UpdateReady (dt);
                 break;
+            case GameStateMgr.GameState.GAME_OVER:
+                UpdateGameOver (dt);
+                break;
             default:
                 break;
             }
         }
+
+        #region GAMEOVER
+        private void UpdateGameOver (float dt)
+        {
+            _gameOverElapsed += dt;
+            if (_gameOverElapsed >= _gameOverDuration) {
+                SetGameState (GameStateMgr.GameState.MAIN_MENU);
+            }
+
+            DrawGameOver ();
+        }
+
+        private void DrawGameOver ()
+        {
+            DrawSmallMaze ();
+            DrawUtil.DrawSpriteAlpha (gameOverTexture, _displayTexture, 0, 0, 25, 15, 20, 25);
+            _displayTexture.Apply ();
+        }
+
+        #endregion // GAMEOVER
 
         bool LeftMap ()
         {
@@ -427,8 +453,7 @@ namespace BDG
                 }
 
                 if (Input.GetKeyDown (KeyCode.Escape)) {
-                    // TODO add game over state
-                    SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                    SetGameState (GameStateMgr.GameState.GAME_OVER);
                 }
 
 
@@ -438,8 +463,7 @@ namespace BDG
             } else {
                 _curPacManLives--;
                 if (_curPacManLives <= 0) {
-                    // TODO probably GAME OVER
-                    SetGameState (GameStateMgr.GameState.MAIN_MENU);
+                    SetGameState (GameStateMgr.GameState.GAME_OVER);
                 } else {
                     GhostManager.GhostMgrSingleton.SendGhostsHome ();
                     ResetPacMan ();
@@ -600,17 +624,50 @@ namespace BDG
         void UpdateAbout (float dt)
         {
             _aboutElapsed += dt;
-            if ((_aboutElapsed >= _aboutDuration) || (Input.anyKeyDown)) {
+
+            var frontPos = _aboutElapsed * _paradeSpeed;
+            var backPos = frontPos - 5 * _paradeSpacing;
+
+            if ((backPos >= 64) || (Input.anyKeyDown)) {
                 SetGameState (GameStateMgr.GameState.MAIN_MENU);
                 return;
             }
+
+            UpdateParade (dt);
+
             DrawAbout ();
         }
+
+        private void UpdateParade (float dt)
+        {
+            var advance = dt * _paradeSpeed;
+
+            foreach (var g in _paradeGhosts) {
+                if (g.MoveDir == MovementDirection.EAST) {
+                    g.XPos += advance;
+                } else {
+                    g.XPos -= advance;
+                }
+            }
+        }
+
         void DrawAbout ()
         {
             DrawUtil.FillTexture (_displayTexture, new Color (0, 0, 0));
             DrawUtil.DrawSpriteOpaque (aboutTexture, _displayTexture, 0, 0, 64, 64, 0, 0);
+
+            DrawParade ();
             _displayTexture.Apply ();
+        }
+
+        private void DrawParade ()
+        {
+            foreach (var g in _paradeGhosts) {
+                if ((g.XPos >= 0) &&
+                    (g.XPos <= 52)) {
+                    g.Draw (_displayTexture);
+                }
+            }
         }
         #endregion // ABOUT
 
@@ -847,8 +904,6 @@ namespace BDG
             case GameStateMgr.GameState.BDG_LOGO:
                 _wizardElapsed = 0.0f;
                 break;
-            case GameStateMgr.GameState.LOREZJAM_CARD:
-                break;
             case GameStateMgr.GameState.MAIN_MENU:
                 //_mainMenu.Reset ();
                 _menuCursorRow = 0;
@@ -856,10 +911,7 @@ namespace BDG
                 break;
             case GameStateMgr.GameState.ABOUT:
                 _aboutElapsed = 0.0f;
-                break;
-            case GameStateMgr.GameState.DEDICATION:
-                break;
-            case GameStateMgr.GameState.RULES:
+                StartParade ();
                 break;
             case GameStateMgr.GameState.READY:
                 _readyElapsed = 0.0f;
@@ -869,9 +921,60 @@ namespace BDG
             case GameStateMgr.GameState.BIG_MAZE:
                 _bigMazeElapsed = 0.0f;
                 break;
+            case GameStateMgr.GameState.GAME_OVER:
+                _gameOverElapsed = 0.0f;
+                break;
             }
         }
 
+        private void StartParade ()
+        {
+            _paradeGhostNames = new List<Ghost.GhostName> {
+                Ghost.GhostName.BLINKY,
+                Ghost.GhostName.PINKY,
+                Ghost.GhostName.INKY,
+                Ghost.GhostName.CLYDE,
+
+                Ghost.GhostName.JAMAAL,
+                Ghost.GhostName.LEFTY,
+                Ghost.GhostName.RIGHTY,
+                Ghost.GhostName.INTERCEPTOR,
+
+                Ghost.GhostName.QUADDY,
+                Ghost.GhostName.CLOCKY,
+                Ghost.GhostName.HILBERT,
+                Ghost.GhostName.LILBRO
+            };
+
+            MathUtil.Shuffle (_paradeGhostNames, new System.Random ());
+
+            int topRow = 28;
+            int bottomRow = 15;
+
+            _paradeGhosts = new List<Ghost> ();
+            for (int i = 0; i < 12; ++i) {
+                var gn = _paradeGhostNames [i];
+                var placeInLine = i / 2;
+
+                int pos = -(placeInLine * _paradeSpacing);
+
+                if (i % 2 == 0) {
+                    // top
+
+                    var g = new Ghost (ghostSpriteSheet, gn, pos, topRow, Ghost.GhostState.CAGED) {
+                        MoveDir = MovementDirection.EAST
+                    };
+                    _paradeGhosts.Add (g);
+                } else {
+                    // bottom
+
+                    var g = new Ghost (ghostSpriteSheet, gn, 64 - pos, bottomRow, Ghost.GhostState.CAGED) {
+                        MoveDir = MovementDirection.WEST
+                    };
+                    _paradeGhosts.Add (g);
+                }
+            }
+        }
 
         void DrawSpriteOpaque (int spriteX, int spriteY, int spriteWidth, int spriteHeight,
             int destX, int destY)

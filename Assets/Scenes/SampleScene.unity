@@ -161,6 +161,7 @@ MonoBehaviour:
   numbersTexture: {fileID: 2800000, guid: 721d5bd5de2d3fb048c358537fc26119, type: 3}
   widgetsTexture: {fileID: 2800000, guid: 77ebd8d7443e8cafabd201bfe467d8bc, type: 3}
   aboutTexture: {fileID: 2800000, guid: b65fa9f602b47bb728127c96f9ac5149, type: 3}
+  gameOverTexture: {fileID: 2800000, guid: f25c560dc3785328a9718005d4c69524, type: 3}
   eatDotSound: {fileID: 8300000, guid: 67d2abd0985feb868b4a336f343d79d3, type: 3}
   eatEnergizerSound: {fileID: 8300000, guid: 3c91afba8649166a7b67bd01820c0625, type: 3}
   eatGhostSound: {fileID: 8300000, guid: 6afff292f3ce7438ea856e84a10b3dc1, type: 3}

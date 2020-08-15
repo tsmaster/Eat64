@@ -6,15 +6,13 @@ namespace BDG
         public enum GameState
         {
             BDG_LOGO,
-            LOREZJAM_CARD,
             TITLE_CARD,
             MAIN_MENU,
             ABOUT,
-            DEDICATION,
-            RULES,
             READY,
             SMALL_MAZE,
-            BIG_MAZE
+            BIG_MAZE,
+            GAME_OVER
         }
 
         public GameStateMgr ()
